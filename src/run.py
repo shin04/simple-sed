@@ -125,7 +125,7 @@ def run(cfg: DictConfig) -> None:
                 print('psds score:', score)
                 print('macro f1:', f1)
                 mlflow.log_metric('psds_score', score, step=epoch)
-                mlflow.log_metric('psds_macro_f1', f1, step=epoch)
+                mlflow.log_metric('psds_macro_f1', f1[0], step=epoch)
 
             if best_loss > valid_loss:
                 best_loss = valid_loss
