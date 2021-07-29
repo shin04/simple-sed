@@ -1,0 +1,86 @@
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import soundfile as sf
+import torch
+import torchvision.transforms as T
+from torch.utils.data import Dataset
+
+from utils.label_encoder import strong_label_encoding
+
+
+class StrongDataset(Dataset):
+    def __init__(
+        self, audio_path: Path, metadata_path: Path,
+        class_map: dict = None,
+        sr: int = 44100,
+        sample_sec: int = 10,
+        frame_hop: int = 256,
+        transforms: T.Compose = None,
+    ) -> None:
+        self.audio_path = audio_path
+
+        self.meta_df = pd.read_csv(metadata_path)
+        self.filenames = self.meta_df['filename'].unique().tolist()
+        self.classes = sorted(self.meta_df['event_label'].unique().tolist())
+        if class_map is not None:
+            self.class_map = class_map
+        else:
+            self.class_map = {c: i for i, c in enumerate(self.classes)}
+
+        self.sr = sr
+        self.sample_len = sr*sample_sec
+        self.frame_hop = frame_hop
+
+        self.transforms = transforms
+
+    def __len__(self):
+        return len(self.filenames)
+
+    def __getitem__(self, idx):
+        filename = self.filenames[idx]
+        p = self.audio_path / filename
+
+        waveform, _ = sf.read(p)
+
+        if self.sample_len > len(waveform):
+            pad_width = (self.sample_len-len(waveform), 0)
+            waveform = np.pad(waveform, pad_width,
+                              'constant', constant_values=0)
+        else:
+            waveform = waveform[:self.sample_len]
+
+        if self.transforms is not None:
+            waveform = self.transforms(waveform)
+
+        label = strong_label_encoding(
+            self.sr, self.sample_len, self.frame_hop,
+            self.meta_df[self.meta_df['filename'] == filename], self.class_map
+        )
+
+        waveform = waveform.reshape(1, -1)
+
+        item = {
+            'filename': filename,
+            'waveform': torch.from_numpy(waveform).float(),
+            'target': torch.from_numpy(label.T).float()
+        }
+
+        return item
+
+
+if __name__ == '__main__':
+    dataset = StrongDataset(
+        audio_path=Path(
+            '/home/kajiwara21/dataset/URBAN-SED_v2.0.0/audio/train'),
+        metadata_path=Path('/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
+        sr=44100,
+        sample_sec=10,
+        frame_hop=256
+    )
+
+    print(len(dataset))
+    print(dataset[0]['filename'])
+    print(dataset[0]['waveform'].shape)
+    print(dataset[0]['target'].shape)
