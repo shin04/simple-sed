@@ -143,23 +143,23 @@ def run(cfg: DictConfig) -> None:
                 f'=========='
             )
             print(
-                f'[TRAIN]\n',
+                '[TRAIN]\n',
                 f'train loss(strong):{train_strong_loss: .4f}, '
                 f'train loss(weak):{train_weak_loss: .4f}, '
                 f'train loss(total):{train_tot_loss: .4f}'
             )
             print(
-                f'[VALID]\n'
+                '[VALID]\n'
                 f'valid loss(strong):{valid_strong_loss: .4f}, '
                 f'valid loss(weak):{valid_weak_loss: .4f}, '
                 f'valid loss(total):{valid_tot_loss: .4f}'
             )
             print(
-                f'[VALID SED EVAL]n'
-                f'segment/class_wise_f1: {valid_sed_evals["segment"]["class_wise_f1"]}',
-                f'segment/overall_f1: {valid_sed_evals["segment"]["overall_f1"]}',
-                f'event/class_wise_f1: {valid_sed_evals["event"]["class_wise_f1"]}',
-                f'event/overall_f1: {valid_sed_evals["event"]["overall_f1"]}',
+                '[VALID SED EVAL]\n'
+                f'segment/class_wise_f1: {valid_sed_evals["segment"]["class_wise_f1"]: .4f}',
+                f'segment/overall_f1: {valid_sed_evals["segment"]["overall_f1"]: .4f}',
+                f'event/class_wise_f1: {valid_sed_evals["event"]["class_wise_f1"]: .4f}',
+                f'event/overall_f1: {valid_sed_evals["event"]["overall_f1"]: .4f}',
             )
 
             for score, f1 in zip(psds_score_list, psds_macro_f1_list):
