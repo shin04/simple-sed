@@ -32,6 +32,9 @@ def run(cfg: DictConfig) -> None:
     train_weak_label = Path(cfg['dataset']['train_weak_label'])
     valid_weak_label = Path(cfg['dataset']['valid_weak_label'])
     # test_weak_label = Path(cfg['dataset']['test_weak_label'])
+    # train_duration = Path(cfg['dataset']['train_duration'])
+    valid_duration = Path(cfg['dataset']['valid_duration'])
+    # test_duration = Path(cfg['dataset']['test_duration'])
     model_path = Path(cfg['model']['save_path'])
 
     sr = cfg['dataset']['sr']
@@ -117,7 +120,8 @@ def run(cfg: DictConfig) -> None:
                 valid_sed_evals
             ) = valid(
                 model, valid_dataloader, device, criterion,
-                valid_dataset.class_map, thresholds, psds_params
+                valid_dataset.class_map, thresholds, psds_params,
+                valid_meta, valid_duration,
             )
 
             mlflow.log_metric('train/strong/loss',
@@ -139,8 +143,8 @@ def run(cfg: DictConfig) -> None:
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
             print(
-                f'[EPOCH {epoch}/{n_epoch}]({time.time() - start: .1f}sec) '
-                f'=========='
+                '====================\n'
+                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) '
             )
             print(
                 '[TRAIN]\n',
@@ -156,19 +160,22 @@ def run(cfg: DictConfig) -> None:
             )
             print(
                 '[VALID SED EVAL]\n'
-                f'segment/class_wise_f1: {valid_sed_evals["segment"]["class_wise_f1"]: .4f}',
-                f'segment/overall_f1: {valid_sed_evals["segment"]["overall_f1"]: .4f}',
-                f'event/class_wise_f1: {valid_sed_evals["event"]["class_wise_f1"]: .4f}',
-                f'event/overall_f1: {valid_sed_evals["event"]["overall_f1"]: .4f}',
+                f'segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f}',
+                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}',
+                f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}',
+                f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}',
             )
 
-            for score, f1 in zip(psds_score_list, psds_macro_f1_list):
+            print('[VALID SCORE]')
+            for i in range(cfg['validation']['psds']['val_num']):
+                score = psds_score_list[i]
+                f1 = psds_macro_f1_list[i][0]
                 print(
-                    f'psds score: {score: .4f}, '
-                    f'macro f1: {f1[0]: .4f}'
+                    f'psds score ({i}):{score: .4f}, '
+                    f'macro f1 ({i}):{f1: .4f}'
                 )
-                mlflow.log_metric('psds_score', score, step=epoch)
-                mlflow.log_metric('psds_macro_f1', f1[0], step=epoch)
+                mlflow.log_metric(f'valid/psds_score/{i}', score, step=epoch)
+                mlflow.log_metric(f'valid/psds_macro_f1/{i}', f1, step=epoch)
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss

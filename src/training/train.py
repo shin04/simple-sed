@@ -9,7 +9,6 @@ import mlflow
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
-    # sed_average_precision,
     calc_sed_weak_f1,
     calc_sed_eval_metrics,
     calc_psds_eval_metrics
@@ -30,7 +29,6 @@ def train(
     train_strong_loss_sum = 0
     train_weak_loss_sum = 0
     train_tot_loss_sum = 0
-    # map_sum = 0
 
     for i, item in enumerate(dataloader):
         optimizer.zero_grad()
@@ -51,24 +49,18 @@ def train(
         train_weak_loss_sum += weak_loss.item()
         train_tot_loss_sum += tot_loss.item()
 
-        # map_sum += sed_average_precision(labels, strong_pred)
-
         mlflow.log_metric('step_train/strong/loss',
                           strong_loss.item(), step=global_step+i+1)
         mlflow.log_metric('step_train/weak/loss',
                           weak_loss.item(), step=global_step+i+1)
         mlflow.log_metric('step_train/tot/loss',
                           tot_loss.item(), step=global_step+i+1)
-        # mlflow.log_metric('step_train_map',
-        #                   map_sum/(i+1), step=global_step+i+1)
 
     train_strong_loss = train_strong_loss_sum / n_batch
     train_weak_loss = train_weak_loss_sum / n_batch
     train_tot_loss = train_tot_loss_sum / n_batch
 
-    # train_map = map_sum / n_batch
-
-    return train_strong_loss, train_weak_loss, train_tot_loss  # , train_map
+    return train_strong_loss, train_weak_loss, train_tot_loss
 
 
 def valid(
@@ -78,7 +70,9 @@ def valid(
     criterion: nn.Module,
     class_map: dict,
     thresholds: list,
-    psds_params: dict
+    psds_params: dict,
+    meta_strong: Path,
+    meta_duration: Path,
 ) -> Union[float, float]:
     model.eval()
 
@@ -118,9 +112,7 @@ def valid(
                     results[thr] += result
 
         sed_evals = calc_sed_eval_metrics(
-            Path('/ml/meta/valid_meta_strong.csv'),
-            MetaDataContainer(results[0.5]),
-            0.1, 0.2
+            meta_strong, MetaDataContainer(results[0.5]), 0.1, 0.2
         )
 
         psds_eval_list, psds_macro_f1_list = [], []
@@ -132,8 +124,8 @@ def valid(
             alpha_st = psds_params['alpha_sts'][i]
 
             psds_eval, psds_macro_f1 = calc_psds_eval_metrics(
-                Path('/ml/meta/valid_meta_strong.csv'),
-                Path('/ml/meta/valid_meta_duration.csv'),
+                meta_strong,
+                meta_duration,
                 results,
                 dtc_threshold=dtc_threshold,
                 gtc_threshold=gtc_threshold,
