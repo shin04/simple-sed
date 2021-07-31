@@ -6,6 +6,9 @@ dataset:
   train_meta: "/ml/meta/train_meta_strong.csv"
   valid_meta: "/ml/meta/valid_meta_strong.csv"
   test_meta: "/ml/meta/test_meta_strong.csv"
+  train_weak_label: "/ml/meta/train_meta_weak.csv"
+  valid_weak_label: "/ml/meta/valid_meta_weak.csv"
+  test_weak_label: "/ml/meta/test_meta_weak.csv"
   sr: 44100
   sec: 10
 
@@ -47,8 +50,8 @@ model:
 validation:
   psds:
     val_num: 1
-    dtc_thresholds: [0.5] # [0.7, 0.1]
-    gtc_thresholds: [0.5] # [0.7, 0.1]
+    dtc_thresholds: [0.7] # [0.7, 0.1]
+    gtc_thresholds: [0.7] # [0.7, 0.1]
     cttc_thresholds: [0.3] # [0.3, 0.3]
     alpha_cts: [0] # [0, 0.5]
-    alpha_sts: [0] #[1, 1]
+    alpha_sts: [1] # [1, 1]

@@ -29,6 +29,17 @@ def sed_average_precision(
     return average_precision
 
 
+def calc_sed_weak_f1(weak_label: torch.Tensor, pred: torch.Tensor, average: str = 'macro') -> float:
+    weak_label = weak_label.to('cpu').detach().numpy().copy()
+    pred = pred.to('cpu').detach().numpy().copy()
+
+    pred = pred > 0.5
+
+    f1_score = metrics.f1_score(weak_label, pred, average=average)
+
+    return f1_score
+
+
 def calc_sed_eval_metrics(
     metadata_path: Path, prediction: MetaDataContainer, time_resolution: float, t_collar: float
 ) -> dict:

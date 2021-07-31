@@ -118,7 +118,8 @@ class CRNN(nn.Module):
         cnn_cfg: dict = {},
         rnn_cfg: dict = {},
         dropout_rate: float = 0.5,
-        out_features: int = 10
+        out_features: int = 10,
+        attention: bool = True,
     ) -> None:
         super(CRNN, self).__init__()
 
@@ -142,6 +143,11 @@ class CRNN(nn.Module):
         self.dropout = nn.Dropout(dropout_rate)
         self.dense = nn.Linear(128 * 2, out_features)
         self.sigmoid = nn.Sigmoid()
+
+        self.attention = attention
+        if attention:
+            self.att_dense = nn.Linear(128 * 2, out_features)
+            self.att_softmax = nn.Softmax(dim=-1)
 
     def forward(self, input):
         """
@@ -168,7 +174,15 @@ class CRNN(nn.Module):
         strong_digit = self.dense(x)
         strong = self.sigmoid(strong_digit)
 
-        return strong.transpose(1, 2)
+        if self.attention:
+            att_x = self.att_dense(x)
+            att_x = self.att_softmax(att_x)
+            att_x = torch.clamp(att_x, min=1e-7, max=1)
+            weak = (strong * att_x).sum(1) / att_x.sum(1)
+        else:
+            weak = strong.mean(1)
+
+        return strong.transpose(1, 2), weak
 
 
 if __name__ == '__main__':

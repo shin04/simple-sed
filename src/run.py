@@ -29,6 +29,9 @@ def run(cfg: DictConfig) -> None:
     train_meta = Path(cfg['dataset']['train_meta'])
     valid_meta = Path(cfg['dataset']['valid_meta'])
     # test_meta = Path(cfg['dataset']['test_meta'])
+    train_weak_label = Path(cfg['dataset']['train_weak_label'])
+    valid_weak_label = Path(cfg['dataset']['valid_weak_label'])
+    # test_weak_label = Path(cfg['dataset']['test_weak_label'])
     model_path = Path(cfg['model']['save_path'])
 
     sr = cfg['dataset']['sr']
@@ -55,6 +58,7 @@ def run(cfg: DictConfig) -> None:
     train_dataset = StrongDataset(
         audio_path=audio_path / 'train',
         metadata_path=train_meta,
+        weak_label_path=train_weak_label,
         sr=sr,
         sample_sec=sample_sec,
         transforms=transforms
@@ -67,6 +71,7 @@ def run(cfg: DictConfig) -> None:
     valid_dataset = StrongDataset(
         audio_path=audio_path / 'validate',
         metadata_path=valid_meta,
+        weak_label_path=valid_weak_label,
         sr=sr,
         sample_sec=sample_sec,
     )
@@ -99,41 +104,50 @@ def run(cfg: DictConfig) -> None:
         for epoch in range(n_epoch):
             start = time.time()
 
-            train_loss, train_map = train(
+            train_strong_loss, train_weak_loss, train_tot_loss = train(
                 global_step, model, train_dataloader, device, optimizer, criterion
             )
-            valid_loss, valid_map, psds_score_list, psds_macro_f1_list = valid(
+            valid_strong_loss, valid_weak_loss, valid_tot_loss, psds_score_list, psds_macro_f1_list, valid_weak_f1 = valid(
                 model, valid_dataloader, device, criterion,
                 valid_dataset.class_map, thresholds, psds_params
             )
 
-            mlflow.log_metric('train_loss', train_loss, step=epoch)
-            mlflow.log_metric('train_macro_map', train_map, step=epoch)
-            mlflow.log_metric('valid_loss', valid_loss, step=epoch)
-            mlflow.log_metric('valid_macro_map', valid_map, step=epoch)
+            mlflow.log_metric('train/strong/loss',
+                              train_strong_loss, step=epoch)
+            mlflow.log_metric('train/weak/loss', train_weak_loss, step=epoch)
+            mlflow.log_metric('train/tot/loss', train_tot_loss, step=epoch)
+            mlflow.log_metric('valid/strong/loss',
+                              valid_strong_loss, step=epoch)
+            mlflow.log_metric('valid/weak/loss', valid_weak_loss, step=epoch)
+            mlflow.log_metric('valid/tot/loss', valid_tot_loss, step=epoch)
+            mlflow.log_metric('valid/weak/f1', valid_weak_f1, step=epoch)
 
             print(
                 f'[EPOCH {epoch}/{n_epoch}] '
                 f'time:{time.time() - start: .1f}, '
-                f'train loss:{train_loss: .4f}, '
-                f'train map:{train_map: .3f}, '
-                f'valid loss:{valid_loss: .4f}, '
-                f'valid map:{valid_map: .3f}'
+                f'train loss(strong):{train_strong_loss: .4f}, '
+                f'train loss(weak):{train_weak_loss: .4f}, '
+                f'train loss(total):{train_tot_loss: .4f}, '
+                f'valid loss(strong):{valid_strong_loss: .4f}, '
+                f'valid loss(weak):{valid_weak_loss: .4f}, '
+                f'valid loss(total):{valid_tot_loss: .4f}, '
             )
 
             for score, f1 in zip(psds_score_list, psds_macro_f1_list):
-                print('psds score:', score)
-                print('macro f1:', f1)
+                print(
+                    f'psds score: {score: .4f}, '
+                    f'macro f1: {f1[0]: .4f}'
+                )
                 mlflow.log_metric('psds_score', score, step=epoch)
                 mlflow.log_metric('psds_macro_f1', f1[0], step=epoch)
 
-            if best_loss > valid_loss:
-                best_loss = valid_loss
+            if best_loss > valid_tot_loss:
+                best_loss = valid_tot_loss
                 with open(model_path / f'{ex_name}-best.pt', 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
 
-            early_stopping(valid_loss)
+            early_stopping(valid_tot_loss)
             if early_stopping.early_stop:
                 print('Early Stopping')
                 break

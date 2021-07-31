@@ -1,4 +1,5 @@
 from pathlib import Path
+from sys import meta_path
 
 import numpy as np
 import pandas as pd
@@ -12,7 +13,7 @@ from utils.label_encoder import strong_label_encoding
 
 class StrongDataset(Dataset):
     def __init__(
-        self, audio_path: Path, metadata_path: Path,
+        self, audio_path: Path, metadata_path: Path, weak_label_path: Path,
         class_map: dict = None,
         sr: int = 44100,
         sample_sec: int = 10,
@@ -22,6 +23,7 @@ class StrongDataset(Dataset):
         self.audio_path = audio_path
 
         self.meta_df = pd.read_csv(metadata_path)
+        self.weak_labels = pd.read_csv(weak_label_path, index_col=0).values
         self.filenames = self.meta_df['filename'].unique().tolist()
         self.classes = sorted(self.meta_df['event_label'].unique().tolist())
         if class_map is not None:
@@ -64,7 +66,8 @@ class StrongDataset(Dataset):
         item = {
             'filename': filename,
             'waveform': torch.from_numpy(waveform).float(),
-            'target': torch.from_numpy(label.T).float()
+            'target': torch.from_numpy(label.T).float(),
+            'weak_label': torch.from_numpy(self.weak_labels[idx]).float()
         }
 
         return item
@@ -74,7 +77,10 @@ if __name__ == '__main__':
     dataset = StrongDataset(
         audio_path=Path(
             '/home/kajiwara21/dataset/URBAN-SED_v2.0.0/audio/train'),
-        metadata_path=Path('/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
+        metadata_path=Path(
+            '/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
+        weak_label_path=Path(
+            '/home/kajiwara21/work/sed/meta/train_meta_weak.csv'),
         sr=44100,
         sample_sec=10,
         frame_hop=256
@@ -84,3 +90,4 @@ if __name__ == '__main__':
     print(dataset[0]['filename'])
     print(dataset[0]['waveform'].shape)
     print(dataset[0]['target'].shape)
+    print(dataset[0]['weak_label'])

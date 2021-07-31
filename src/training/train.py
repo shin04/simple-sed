@@ -9,7 +9,8 @@ import mlflow
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
-    sed_average_precision,
+    # sed_average_precision,
+    calc_sed_weak_f1,
     # calc_sed_eval_metrics,
     calc_psds_eval_metrics
 )
@@ -26,32 +27,48 @@ def train(
     model.train()
 
     n_batch = len(dataloader)
-    train_loss_sum = 0
-    map_sum = 0
+    train_strong_loss_sum = 0
+    train_weak_loss_sum = 0
+    train_tot_loss_sum = 0
+    # map_sum = 0
 
     for i, item in enumerate(dataloader):
         optimizer.zero_grad()
 
         data = item['waveform'].to(device)
         labels = item['target'].to(device)
+        weak_labels = item['weak_label'].to(device)
 
-        outputs = model(data)
+        strong_pred, weak_pred = model(data)
 
-        loss = criterion(outputs, labels)
-        loss.backward()
+        strong_loss = criterion(strong_pred, labels)
+        weak_loss = criterion(weak_pred, weak_labels)
+        tot_loss = strong_loss + weak_loss
+
+        tot_loss.backward()
         optimizer.step()
-        train_loss_sum += loss.item()
+        train_strong_loss_sum += strong_loss.item()
+        train_weak_loss_sum += weak_loss.item()
+        train_tot_loss_sum += tot_loss.item()
 
-        map_sum += sed_average_precision(labels, outputs)
+        # map_sum += sed_average_precision(labels, strong_pred)
 
-        mlflow.log_metric('step_train_loss', loss.item(), step=global_step+i+1)
-        mlflow.log_metric('step_train_map',
-                          map_sum/(i+1), step=global_step+i+1)
+        mlflow.log_metric('step_train/strong/loss',
+                          strong_loss.item(), step=global_step+i+1)
+        mlflow.log_metric('step_train/weak/loss',
+                          weak_loss.item(), step=global_step+i+1)
+        mlflow.log_metric('step_train/tot/loss',
+                          tot_loss.item(), step=global_step+i+1)
+        # mlflow.log_metric('step_train_map',
+        #                   map_sum/(i+1), step=global_step+i+1)
 
-    train_loss = train_loss_sum / n_batch
-    train_map = map_sum / n_batch
+    train_strong_loss = train_strong_loss_sum / n_batch
+    train_weak_loss = train_weak_loss_sum / n_batch
+    train_tot_loss = train_tot_loss_sum / n_batch
 
-    return train_loss, train_map
+    # train_map = map_sum / n_batch
+
+    return train_strong_loss, train_weak_loss, train_tot_loss  # , train_map
 
 
 def valid(
@@ -66,8 +83,10 @@ def valid(
     model.eval()
 
     n_batch = len(dataloader)
-    valid_loss_sum = 0
-    map_sum = 0
+    valid_strong_loss_sum = 0
+    valid_weak_loss_sum = 0
+    valid_tot_loss_sum = 0
+    weak_f1_sum = 0
     results = {}
     for thr in thresholds:
         results[thr] = []
@@ -76,15 +95,21 @@ def valid(
         for _, item in enumerate(dataloader):
             data = item['waveform'].to(device)
             labels = item['target'].to(device)
+            weak_labels = item['weak_label'].to(device)
 
-            outputs = model(data)
+            strong_pred, weak_pred = model(data)
 
-            loss = criterion(outputs, labels)
-            valid_loss_sum += loss.item()
+            strong_loss = criterion(strong_pred, labels)
+            weak_loss = criterion(weak_pred, weak_labels)
+            tot_loss = strong_loss + weak_loss
 
-            map_sum += sed_average_precision(labels, outputs)
+            valid_strong_loss_sum += strong_loss.item()
+            valid_weak_loss_sum += weak_loss.item()
+            valid_tot_loss_sum += tot_loss.item()
 
-            for i, pred in enumerate(outputs):
+            weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred)
+
+            for i, pred in enumerate(strong_pred):
                 label = pred.to('cpu').detach().numpy().copy()
                 for thr in thresholds:
                     result = strong_label_decoding(
@@ -120,7 +145,9 @@ def valid(
             psds_eval_list.append(psds_eval)
             psds_macro_f1_list.append(psds_macro_f1)
 
-        valid_loss = valid_loss_sum / n_batch
-        valid_map = map_sum / n_batch
+        valid_strong_loss = valid_strong_loss_sum / n_batch
+        valid_weak_loss = valid_weak_loss_sum / n_batch
+        valid_tot_loss = valid_tot_loss_sum / n_batch
+        valid_weak_f1 = weak_f1_sum / n_batch
 
-    return valid_loss, valid_map, psds_eval_list, psds_macro_f1_list
+    return valid_strong_loss, valid_weak_loss, valid_tot_loss, psds_eval_list, psds_macro_f1_list, valid_weak_f1
