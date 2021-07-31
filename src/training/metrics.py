@@ -1,4 +1,5 @@
 from pathlib import Path
+import time
 
 import pandas as pd
 import torch
@@ -44,6 +45,7 @@ def calc_sed_eval_metrics(
     metadata_path: Path, prediction: MetaDataContainer, time_resolution: float, t_collar: float
 ) -> dict:
     meta_df = pd.read_csv(metadata_path)
+    start = time.perf_counter()
     grand_truth = MetaDataContainer(meta_df.to_dict('records'))
 
     segment_based_metrics = SegmentBasedMetrics(

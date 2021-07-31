@@ -107,7 +107,15 @@ def run(cfg: DictConfig) -> None:
             train_strong_loss, train_weak_loss, train_tot_loss = train(
                 global_step, model, train_dataloader, device, optimizer, criterion
             )
-            valid_strong_loss, valid_weak_loss, valid_tot_loss, psds_score_list, psds_macro_f1_list, valid_weak_f1 = valid(
+            (
+                valid_strong_loss,
+                valid_weak_loss,
+                valid_tot_loss,
+                psds_score_list,
+                psds_macro_f1_list,
+                valid_weak_f1,
+                valid_sed_evals
+            ) = valid(
                 model, valid_dataloader, device, criterion,
                 valid_dataset.class_map, thresholds, psds_params
             )
@@ -121,16 +129,37 @@ def run(cfg: DictConfig) -> None:
             mlflow.log_metric('valid/weak/loss', valid_weak_loss, step=epoch)
             mlflow.log_metric('valid/tot/loss', valid_tot_loss, step=epoch)
             mlflow.log_metric('valid/weak/f1', valid_weak_f1, step=epoch)
+            mlflow.log_metric('valid/sed_eval/segment/class_wise_f1',
+                              valid_sed_evals['segment']['class_wise_f1'], step=epoch)
+            mlflow.log_metric('valid/sed_eval/segment/overall_f1',
+                              valid_sed_evals['segment']['overall_f1'], step=epoch)
+            mlflow.log_metric('valid/sed_eval/event/class_wise_f1',
+                              valid_sed_evals['event']['class_wise_f1'], step=epoch)
+            mlflow.log_metric('valid/sed_eval/event/overall_f1',
+                              valid_sed_evals['event']['overall_f1'], step=epoch)
 
             print(
-                f'[EPOCH {epoch}/{n_epoch}] '
-                f'time:{time.time() - start: .1f}, '
+                f'[EPOCH {epoch}/{n_epoch}]({time.time() - start: .1f}sec) '
+                f'=========='
+            )
+            print(
+                f'[TRAIN]\n',
                 f'train loss(strong):{train_strong_loss: .4f}, '
                 f'train loss(weak):{train_weak_loss: .4f}, '
-                f'train loss(total):{train_tot_loss: .4f}, '
+                f'train loss(total):{train_tot_loss: .4f}'
+            )
+            print(
+                f'[VALID]\n'
                 f'valid loss(strong):{valid_strong_loss: .4f}, '
                 f'valid loss(weak):{valid_weak_loss: .4f}, '
-                f'valid loss(total):{valid_tot_loss: .4f}, '
+                f'valid loss(total):{valid_tot_loss: .4f}'
+            )
+            print(
+                f'[VALID SED EVAL]n'
+                f'segment/class_wise_f1: {valid_sed_evals["segment"]["class_wise_f1"]}',
+                f'segment/overall_f1: {valid_sed_evals["segment"]["overall_f1"]}',
+                f'event/class_wise_f1: {valid_sed_evals["event"]["class_wise_f1"]}',
+                f'event/overall_f1: {valid_sed_evals["event"]["overall_f1"]}',
             )
 
             for score, f1 in zip(psds_score_list, psds_macro_f1_list):

@@ -4,14 +4,14 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-# from dcase_util.containers import MetaDataContainer
+from dcase_util.containers import MetaDataContainer
 import mlflow
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
     # sed_average_precision,
     calc_sed_weak_f1,
-    # calc_sed_eval_metrics,
+    calc_sed_eval_metrics,
     calc_psds_eval_metrics
 )
 
@@ -117,11 +117,11 @@ def valid(
                     )
                     results[thr] += result
 
-        # sed_evals = calc_sed_eval_metrics(
-        #     Path('/ml/meta/valid_meta_strong.csv'),
-        #     MetaDataContainer(results),
-        #     0.1, 0.2
-        # )
+        sed_evals = calc_sed_eval_metrics(
+            Path('/ml/meta/valid_meta_strong.csv'),
+            MetaDataContainer(results[0.5]),
+            0.1, 0.2
+        )
 
         psds_eval_list, psds_macro_f1_list = [], []
         for i in range(psds_params['val_num']):
@@ -150,4 +150,12 @@ def valid(
         valid_tot_loss = valid_tot_loss_sum / n_batch
         valid_weak_f1 = weak_f1_sum / n_batch
 
-    return valid_strong_loss, valid_weak_loss, valid_tot_loss, psds_eval_list, psds_macro_f1_list, valid_weak_f1
+    return (
+        valid_strong_loss,
+        valid_weak_loss,
+        valid_tot_loss,
+        psds_eval_list,
+        psds_macro_f1_list,
+        valid_weak_f1,
+        sed_evals,
+    )
