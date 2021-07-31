@@ -22,13 +22,15 @@ class StrongDataset(Dataset):
         self.audio_path = audio_path
 
         self.meta_df = pd.read_csv(metadata_path)
-        self.weak_labels = pd.read_csv(weak_label_path, index_col=0).values
         self.filenames = self.meta_df['filename'].unique().tolist()
         self.classes = sorted(self.meta_df['event_label'].unique().tolist())
         if class_map is not None:
             self.class_map = class_map
         else:
             self.class_map = {c: i for i, c in enumerate(self.classes)}
+
+        weak_label_df = pd.read_csv(weak_label_path, index_col=0)
+        self.weak_labels = weak_label_df[self.class_map.keys()].values
 
         self.sr = sr
         self.sample_len = sr*sample_sec
