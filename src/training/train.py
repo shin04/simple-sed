@@ -1,6 +1,7 @@
 from typing import Union
 from pathlib import Path
 
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -115,6 +116,10 @@ def valid(
             meta_strong, MetaDataContainer(results[0.5]), 0.1, 0.2
         )
 
+        for k, v in results.items():
+            df = pd.DataFrame(v)
+            df.to_csv(f'./res-{k}.csv')
+
         psds_eval_list, psds_macro_f1_list = [], []
         for i in range(psds_params['val_num']):
             dtc_threshold = psds_params['dtc_thresholds'][i]
@@ -131,7 +136,7 @@ def valid(
                 gtc_threshold=gtc_threshold,
                 cttc_threshold=cttc_threshold,
                 alpha_ct=alpha_ct,
-                alpha_st=alpha_st
+                alpha_st=alpha_st,
             )
 
             psds_eval_list.append(psds_eval)

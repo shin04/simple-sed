@@ -1,6 +1,6 @@
 from pathlib import Path
-import time
 
+import numpy as np
 import pandas as pd
 import torch
 from sklearn import metrics
@@ -45,7 +45,6 @@ def calc_sed_eval_metrics(
     metadata_path: Path, prediction: MetaDataContainer, time_resolution: float, t_collar: float
 ) -> dict:
     meta_df = pd.read_csv(metadata_path)
-    start = time.perf_counter()
     grand_truth = MetaDataContainer(meta_df.to_dict('records'))
 
     segment_based_metrics = SegmentBasedMetrics(
@@ -89,15 +88,15 @@ def calc_psds_eval_metrics(
     gt_path: Path,
     meta_path: Path,
     predictions: dict,
-    dtc_threshold=0.5,
-    gtc_threshold=0.5,
-    cttc_threshold=0.3,
-    alpha_ct=0,
-    alpha_st=0,
-    max_efpr=100,
+    dtc_threshold: float = 0.5,
+    gtc_threshold: float = 0.5,
+    cttc_threshold: float = 0.3,
+    alpha_ct: float = 0,
+    alpha_st: float = 0,
+    max_efpr: float = 100,
 ) -> dict:
     gt_df = pd.read_csv(gt_path)
-    meta_df = pd.read_csv(meta_path)
+    meta_df = pd.read_csv(meta_path)  # cols=[filename, duration]
 
     psds_eval = PSDSEval(
         ground_truth=gt_df,
@@ -107,20 +106,33 @@ def calc_psds_eval_metrics(
         cttc_threshold=cttc_threshold
     )
 
+    """calculation macro f1 score"""
+    psds_macro_f1 = []
+    for thr in predictions.keys():
+        pred_df = pd.DataFrame(predictions[thr])
+        if not pred_df.empty:
+            macro_f1, _ = psds_eval.compute_macro_f_score(pred_df)
+        else:
+            macro_f1 = 0.
+        if np.isnan(macro_f1):
+            macro_f1 = 0.
+        psds_macro_f1.append(macro_f1)
+    psds_macro_f1 = np.mean(psds_macro_f1)
+
+    """calculation psds"""
     for i, k in enumerate(predictions.keys()):
         pred_df = pd.DataFrame(predictions[k])
-        if len(pred_df.columns) == 0:
-            pred_df = pd.DataFrame(
-                columns=['filename', 'event_label', 'onset', 'offset'])
+        # if len(pred_df.columns) == 0:
+        #     pred_df = pd.DataFrame(
+        #         columns=['filename', 'event_label', 'onset', 'offset'])
         det = pred_df
-        det["index"] = range(1, len(det) + 1)
-        det = det.set_index("index")
+        # det["index"] = range(1, len(det) + 1)
+        # det = det.set_index("index")
         psds_eval.add_operating_point(
             det, info={"name": f"Op {i + 1:02d}", "threshold": k}
         )
 
     psds_score = psds_eval.psds(
         alpha_ct=alpha_ct, alpha_st=alpha_st, max_efpr=max_efpr)
-    psds_macro_f1 = psds_eval.compute_macro_f_score(det)
 
     return psds_score.value, psds_macro_f1

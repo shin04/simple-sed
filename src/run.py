@@ -169,7 +169,7 @@ def run(cfg: DictConfig) -> None:
             print('[VALID SCORE]')
             for i in range(cfg['validation']['psds']['val_num']):
                 score = psds_score_list[i]
-                f1 = psds_macro_f1_list[i][0]
+                f1 = psds_macro_f1_list[i]
                 print(
                     f'psds score ({i}):{score: .4f}, '
                     f'macro f1 ({i}):{f1: .4f}'
