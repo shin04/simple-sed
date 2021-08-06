@@ -163,10 +163,15 @@ class CRNN(nn.Module):
         x = self.amp_to_db(x).clamp(min=-50, max=80)
         x = self.scaler(x)
         # x = self.spec_aug(x)
+        x = x.transpose(1, 2).unsqueeze(1)
+
+        print(x.shape)
 
         # (batch_size, channels, freq, frames) > (batch_size, channels, frames, freq)
-        x = x.transpose(3, 2)
+        # x = x.transpose(3, 2)
         x = self.cnn(x)
+
+        print(x.size)
 
         # (batch_size, channels, frames, freq) > (batch_size, frames, channels)
         x = x.squeeze(-1)
@@ -193,7 +198,7 @@ if __name__ == '__main__':
     model = CRNN(
         44100, 2048, 2048, 256, 128
     ).cpu()
-    summary(model, input_size=(8, 1, 44100*10))
+    summary(model, input_size=(8, 44100*10))
 
     # cnn = CNN().cpu()
     # summary(cnn, input_size=(8, 1, 1723, 128))

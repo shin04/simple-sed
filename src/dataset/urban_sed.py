@@ -62,7 +62,7 @@ class StrongDataset(Dataset):
             self.meta_df[self.meta_df['filename'] == filename], self.class_map
         )
 
-        waveform = waveform.reshape(1, -1)
+        # waveform = waveform.reshape(1, -1)
 
         item = {
             'filename': filename,
