@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy
 from dcase_util.data import DecisionEncoder
 
 
@@ -52,16 +53,21 @@ def strong_label_decoding(
         preds: (fraes, class)
     """
 
+    classes = list(class_map.keys())
     result_label = []
     for i, pred in enumerate(preds):
-        event = [k for k, v in class_map.items() if v == i][0]
+        # event = [k for k, v in class_map.items() if v == i][0]
+        event = classes[i]
 
         pred_section = pred > threshold
+        pred_section = scipy.ndimage.filters.median_filter(pred_section, 7)
         change_indices = DecisionEncoder().find_contiguous_regions(pred_section)
         change_indices = change_indices / sr * frame_hop
         for indice in change_indices:
             onset = indice[0]
             offset = indice[1]
+            if offset > 10:
+                offset = 10.0
             result_label.append(
                 {'filename': filename, 'event_label': event, 'onset': onset, 'offset': offset})
 
@@ -88,4 +94,5 @@ if __name__ == '__main__':
 
     result_label = strong_label_decoding(
         label.T, 'soundscape_train_uniform1090.wav', 44100, 256, class_map)
-    print(result_label)
+    result_df = pd.DataFrame(result_label)
+    print(result_df)

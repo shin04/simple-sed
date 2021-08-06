@@ -7,3 +7,6 @@ __pycache__
 /notebooks/
 /*env/
 /src/outputs/
+
+*csv
+*png

@@ -44,7 +44,7 @@ def train(
         weak_loss = criterion(weak_pred, weak_labels)
         tot_loss = strong_loss + weak_loss
 
-        tot_loss.backward()
+        strong_loss.backward()
         optimizer.step()
         train_strong_loss_sum += strong_loss.item()
         train_weak_loss_sum += weak_loss.item()
@@ -116,31 +116,24 @@ def valid(
             meta_strong, MetaDataContainer(results[0.5]), 0.1, 0.2
         )
 
-        for k, v in results.items():
-            df = pd.DataFrame(v)
-            df.to_csv(f'./res-{k}.csv')
-
         psds_eval_list, psds_macro_f1_list = [], []
         for i in range(psds_params['val_num']):
-            dtc_threshold = psds_params['dtc_thresholds'][i]
-            gtc_threshold = psds_params['gtc_thresholds'][i]
-            cttc_threshold = psds_params['cttc_thresholds'][i]
-            alpha_ct = psds_params['alpha_cts'][i]
-            alpha_st = psds_params['alpha_sts'][i]
-
             psds_eval, psds_macro_f1 = calc_psds_eval_metrics(
                 meta_strong,
                 meta_duration,
                 results,
-                dtc_threshold=dtc_threshold,
-                gtc_threshold=gtc_threshold,
-                cttc_threshold=cttc_threshold,
-                alpha_ct=alpha_ct,
-                alpha_st=alpha_st,
+                dtc_threshold=psds_params['dtc_thresholds'][i],
+                gtc_threshold=psds_params['gtc_thresholds'][i],
+                cttc_threshold=psds_params['cttc_thresholds'][i],
+                alpha_ct=psds_params['alpha_cts'][i],
+                alpha_st=psds_params['alpha_sts'][i],
             )
 
             psds_eval_list.append(psds_eval)
             psds_macro_f1_list.append(psds_macro_f1)
+
+        pred_df = pd.DataFrame(results[0.5])
+        pred_df.to_csv('/ml/pred.csv')
 
         valid_strong_loss = valid_strong_loss_sum / n_batch
         valid_weak_loss = valid_weak_loss_sum / n_batch

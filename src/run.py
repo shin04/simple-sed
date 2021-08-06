@@ -56,7 +56,9 @@ def run(cfg: DictConfig) -> None:
 
     psds_params = cfg['validation']['psds']
 
-    transforms = T.Compose([GaussianNoise()])
+    """prepare datasets"""
+    # transforms = T.Compose([GaussianNoise()])
+    transforms = T.Compose([])
 
     train_dataset = StrongDataset(
         audio_path=audio_path / 'train',
@@ -86,17 +88,20 @@ def run(cfg: DictConfig) -> None:
     if train_dataset.classes != valid_dataset.classes:
         raise RuntimeError("class_map is wrong")
 
+    """prepare training"""
     model = CRNN(
         sr=sr,
         **cfg['feature'],
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
+        attention=True
     ).to(device)
     early_stopping = EarlyStopping(patience=es_patience)
     optimizer = optim.Adam(model.parameters(), lr=lr, amsgrad=False)
     criterion = nn.BCELoss()
 
+    """training and validation"""
     best_loss = 10000
     global_step = 0
     mlflow.set_tracking_uri(
@@ -177,13 +182,13 @@ def run(cfg: DictConfig) -> None:
                 mlflow.log_metric(f'valid/psds_score/{i}', score, step=epoch)
                 mlflow.log_metric(f'valid/psds_macro_f1/{i}', f1, step=epoch)
 
-            if best_loss > valid_tot_loss:
-                best_loss = valid_tot_loss
+            if best_loss > valid_strong_loss:
+                best_loss = valid_strong_loss
                 with open(model_path / f'{ex_name}-best.pt', 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
 
-            early_stopping(valid_tot_loss)
+            early_stopping(valid_strong_loss)
             if early_stopping.early_stop:
                 print('Early Stopping')
                 break

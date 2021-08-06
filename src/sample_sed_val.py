@@ -98,7 +98,7 @@ from tqdm import tqdm
 # )
 
 ref_df = pd.read_csv('../meta/valid_meta_strong.csv')
-est_df = pd.read_csv('./result.csv')
+est_df = pd.read_csv('../pred.csv')
 
 reference_event_list = dcase_util.containers.MetaDataContainer(ref_df.T.to_dict().values())
 estimated_event_list = dcase_util.containers.MetaDataContainer(est_df.T.to_dict().values())

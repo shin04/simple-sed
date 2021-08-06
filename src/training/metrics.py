@@ -2,8 +2,8 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import torch
 from sklearn import metrics
+import torch
 from sed_eval.sound_event import SegmentBasedMetrics, EventBasedMetrics
 from psds_eval import PSDSEval
 from dcase_util.containers import MetaDataContainer
@@ -122,12 +122,7 @@ def calc_psds_eval_metrics(
     """calculation psds"""
     for i, k in enumerate(predictions.keys()):
         pred_df = pd.DataFrame(predictions[k])
-        # if len(pred_df.columns) == 0:
-        #     pred_df = pd.DataFrame(
-        #         columns=['filename', 'event_label', 'onset', 'offset'])
         det = pred_df
-        # det["index"] = range(1, len(det) + 1)
-        # det = det.set_index("index")
         psds_eval.add_operating_point(
             det, info={"name": f"Op {i + 1:02d}", "threshold": k}
         )
