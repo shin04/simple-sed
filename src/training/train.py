@@ -1,7 +1,6 @@
 from typing import Union
 from pathlib import Path
 
-import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -131,9 +130,6 @@ def valid(
 
             psds_eval_list.append(psds_eval)
             psds_macro_f1_list.append(psds_macro_f1)
-
-        pred_df = pd.DataFrame(results[0.5])
-        pred_df.to_csv('/ml/pred.csv')
 
         valid_strong_loss = valid_strong_loss_sum / n_batch
         valid_weak_loss = valid_weak_loss_sum / n_batch

@@ -154,7 +154,7 @@ class CRNN(nn.Module):
 
     def forward(self, input):
         """
-        input: waveform (batch_size, channels, frames)
+        input: waveform (batch_size, frames)
         """
 
         x = self.mel_spec_trans(input)
@@ -165,13 +165,9 @@ class CRNN(nn.Module):
         # x = self.spec_aug(x)
         x = x.transpose(1, 2).unsqueeze(1)
 
-        print(x.shape)
-
         # (batch_size, channels, freq, frames) > (batch_size, channels, frames, freq)
         # x = x.transpose(3, 2)
         x = self.cnn(x)
-
-        print(x.size)
 
         # (batch_size, channels, frames, freq) > (batch_size, frames, channels)
         x = x.squeeze(-1)
