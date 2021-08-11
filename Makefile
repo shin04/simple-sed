@@ -1,6 +1,6 @@
 SHELL=/bin/zsh
 
-HOME_DIR:=$HOME
+HOME_DIR:=$${HOME}
 include .env
 export $(shell sed 's/=.*//' .env)
 

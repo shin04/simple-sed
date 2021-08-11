@@ -39,6 +39,7 @@ def run(cfg: DictConfig) -> None:
 
     sr = cfg['dataset']['sr']
     sample_sec = cfg['dataset']['sec']
+    hop_length = cfg['feature']['hop_length']
     net_pooling_rate = cfg['dataset']['net_pooling_rate']
 
     n_epoch = cfg['training']['n_epoch']
@@ -67,6 +68,7 @@ def run(cfg: DictConfig) -> None:
         weak_label_path=train_weak_label,
         sr=sr,
         sample_sec=sample_sec,
+        frame_hop=hop_length,
         net_pooling_rate=net_pooling_rate,
         transforms=transforms
     )
@@ -80,6 +82,7 @@ def run(cfg: DictConfig) -> None:
         metadata_path=valid_meta,
         weak_label_path=valid_weak_label,
         sr=sr,
+        frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
     )
@@ -185,13 +188,13 @@ def run(cfg: DictConfig) -> None:
                 mlflow.log_metric(f'valid/psds_score/{i}', score, step=epoch)
                 mlflow.log_metric(f'valid/psds_macro_f1/{i}', f1, step=epoch)
 
-            if best_loss > valid_strong_loss:
-                best_loss = valid_strong_loss
+            if best_loss > valid_tot_loss:
+                best_loss = valid_tot_loss
                 with open(model_path / f'{ex_name}-best.pt', 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
 
-            early_stopping(valid_strong_loss)
+            early_stopping(valid_tot_loss)
             if early_stopping.early_stop:
                 print('Early Stopping')
                 break

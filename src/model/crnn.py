@@ -1,3 +1,5 @@
+import yaml
+
 import torch
 import torch.nn as nn
 import torchaudio.transforms as audio_nn
@@ -134,11 +136,11 @@ class CRNN(nn.Module):
         self.amp_to_db = audio_nn.AmplitudeToDB(stype='amplitude')
         self.amp_to_db.amin = 1e-5
 
-        self.scaler = TorchScaler('instance', 'minmax', dims=[1, 2])
+        # self.scaler = TorchScaler('instance', 'minmax', dims=[1, 2])
 
-        self.spec_aug = SpecAugmentation(
-            time_drop_width=64, time_stripes_num=2, freq_drop_width=8, freq_stripes_num=2
-        )
+        # self.spec_aug = SpecAugmentation(
+        #     time_drop_width=64, time_stripes_num=2, freq_drop_width=8, freq_stripes_num=2
+        # )
 
         self.cnn = CNN(**cnn_cfg)
         self.rnn = BidirectionalGRU(**rnn_cfg)
@@ -161,8 +163,9 @@ class CRNN(nn.Module):
         # log_offset = 1e-6
         # x = torch.log(x + log_offset)
         x = self.amp_to_db(x).clamp(min=-50, max=80)
-        x = self.scaler(x)
+        # x = self.scaler(x)
         # x = self.spec_aug(x)
+
         x = x.transpose(1, 2).unsqueeze(1)
 
         # (batch_size, channels, freq, frames) > (batch_size, channels, frames, freq)
@@ -191,9 +194,23 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
+    with open('../config/urban_sed_2.yaml') as yml:
+        conf = yaml.load(yml)
+
+    model_conf = conf['model']
+    feat_conf = conf['feature']
     model = CRNN(
-        44100, 2048, 2048, 256, 128
+        sr=conf['dataset']['sr'],
+        n_filters=feat_conf['n_filters'],
+        n_window=feat_conf['n_window'],
+        hop_length=feat_conf['hop_length'],
+        n_mels=feat_conf['n_mels'],
+        cnn_cfg=model_conf['cnn'],
+        rnn_cfg=model_conf['rnn']
     ).cpu()
+    # model = CRNN(
+    #     44100, 2048, 2048, 256, 128
+    # ).cpu()
     summary(model, input_size=(8, 44100*10))
 
     # cnn = CNN().cpu()

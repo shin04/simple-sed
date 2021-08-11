@@ -107,7 +107,7 @@ def valid(
                 label = pred.to('cpu').detach().numpy().copy()
                 for thr in thresholds:
                     result = strong_label_decoding(
-                        label, item['filename'][i], 44100, 256, 4, class_map, thr
+                        label, item['filename'][i], 44100, 160, 1, class_map, thr
                     )
                     results[thr] += result
 
