@@ -1,6 +1,7 @@
 import os
 import time
 from pathlib import Path
+from datetime import datetime
 
 import hydra
 import mlflow
@@ -19,9 +20,13 @@ from training.test import test
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
+TIME_TEMPLATE = '%Y%m%d%H%M%S'
+
 
 @hydra.main(config_path='../config', config_name='urban_sed.yaml')
 def run(cfg: DictConfig) -> None:
+    ts = datetime.now().strftime(TIME_TEMPLATE)
+
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
@@ -36,7 +41,7 @@ def run(cfg: DictConfig) -> None:
     # train_duration = Path(cfg['dataset']['train_duration'])
     # valid_duration = Path(cfg['dataset']['valid_duration'])
     test_duration = Path(cfg['dataset']['test_duration'])
-    model_path = Path(cfg['model']['save_path']) / f'{ex_name}-best.pt'
+    model_path = Path(cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
 
     sr = cfg['dataset']['sr']
     sample_sec = cfg['dataset']['sec']
