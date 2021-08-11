@@ -219,18 +219,18 @@ def run(cfg: DictConfig) -> None:
         test_sed_evals,
     ) = test(
         model, test_dataloader, device, test_dataset.class_map, thresholds,
-        cfg['validation']['psds'], test_meta, test_duration,
+        psds_params, test_meta, test_duration,
         sr, hop_length, net_pooling_rate
     )
 
     print(
         '===============\n'
         '[test EVAL]\n'
-        f'weak_f1:{test_weak_f1: .4f}',
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}',
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}',
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}',
-        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}',
+        f'weak_f1:{test_weak_f1: .4f}\n',
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
+        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
+        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
     )
 
     for i in range(cfg['validation']['psds']['val_num']):
