@@ -17,14 +17,14 @@ dataset:
   net_pooling_rate: 4
 
 feature:
-  n_filters: 512
-  n_window: 320
-  hop_length: 160
-  n_mels: 64
+  n_filters: 2048
+  n_window: 2048
+  hop_length: 256
+  n_mels: 128
 
 training:
   n_epoch: 100
-  batch_size: 32
+  batch_size: 24
   lr: 0.001
   num_workers: 8
   early_stop_patience: 100
