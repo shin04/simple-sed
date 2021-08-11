@@ -14,6 +14,7 @@ import torchvision.transforms as T
 from model.crnn import CRNN
 from dataset.urban_sed import StrongDataset
 from training.train import train, valid
+from training.test import test
 # from utils.augmentation import GaussianNoise
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
@@ -28,14 +29,14 @@ def run(cfg: DictConfig) -> None:
     audio_path = Path(cfg['dataset']['audio_path'])
     train_meta = Path(cfg['dataset']['train_meta'])
     valid_meta = Path(cfg['dataset']['valid_meta'])
-    # test_meta = Path(cfg['dataset']['test_meta'])
+    test_meta = Path(cfg['dataset']['test_meta'])
     train_weak_label = Path(cfg['dataset']['train_weak_label'])
     valid_weak_label = Path(cfg['dataset']['valid_weak_label'])
-    # test_weak_label = Path(cfg['dataset']['test_weak_label'])
+    test_weak_label = Path(cfg['dataset']['test_weak_label'])
     # train_duration = Path(cfg['dataset']['train_duration'])
-    valid_duration = Path(cfg['dataset']['valid_duration'])
-    # test_duration = Path(cfg['dataset']['test_duration'])
-    model_path = Path(cfg['model']['save_path'])
+    # valid_duration = Path(cfg['dataset']['valid_duration'])
+    test_duration = Path(cfg['dataset']['test_duration'])
+    model_path = Path(cfg['model']['save_path']) / f'{ex_name}-best.pt'
 
     sr = cfg['dataset']['sr']
     sample_sec = cfg['dataset']['sec']
@@ -129,7 +130,8 @@ def run(cfg: DictConfig) -> None:
                 valid_sed_evals
             ) = valid(
                 model, valid_dataloader, device, criterion,
-                valid_dataset.class_map, thresholds, valid_meta
+                valid_dataset.class_map, thresholds, valid_meta,
+                sr, hop_length, net_pooling_rate
             )
 
             mlflow.log_metric('train/strong/loss',
@@ -176,7 +178,7 @@ def run(cfg: DictConfig) -> None:
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
-                with open(model_path / f'{ex_name}-best.pt', 'wb') as f:
+                with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
 
@@ -186,6 +188,58 @@ def run(cfg: DictConfig) -> None:
                 break
 
             global_step += len(train_dataset)
+
+    """test step"""
+    test_dataset = StrongDataset(
+        audio_path=audio_path / 'test',
+        metadata_path=test_meta,
+        weak_label_path=test_weak_label,
+        sr=sr,
+        frame_hop=hop_length,
+        sample_sec=sample_sec,
+        net_pooling_rate=net_pooling_rate,
+    )
+    test_dataloader = DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=pin_memory
+    )
+    model = CRNN(
+        sr=sr,
+        **cfg['feature'],
+        **cfg['model']['dence'],
+        cnn_cfg=dict(cfg['model']['cnn']),
+        rnn_cfg=dict(cfg['model']['rnn']),
+        attention=True
+    ).to(device)
+    model.load_state_dict(torch.load(model_path))
+    (
+        test_psds_eval_list,
+        test_psds_macro_f1_list,
+        test_weak_f1,
+        test_sed_evals,
+    ) = test(
+        model, test_dataloader, device, test_dataset.class_map, thresholds,
+        cfg['validation']['psds'], test_meta, test_duration,
+        sr, hop_length, net_pooling_rate
+    )
+
+    print(
+        '===============\n'
+        '[test EVAL]\n'
+        f'weak_f1:{test_weak_f1: .4f}',
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}',
+        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}',
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}',
+        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}',
+    )
+
+    for i in range(cfg['validation']['psds']['val_num']):
+        score = test_psds_eval_list[i]
+        f1 = test_psds_macro_f1_list[i]
+        print(
+            f'psds score ({i}):{score: .4f}, '
+            f'macro f1 ({i}):{f1: .4f}'
+        )
 
 
 if __name__ == '__main__':

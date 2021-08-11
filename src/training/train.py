@@ -70,6 +70,9 @@ def valid(
     class_map: dict,
     thresholds: list,
     meta_strong: Path,
+    sr: int,
+    hop_length: int,
+    pooling_rate: int,
 ) -> Union[float, float]:
     model.eval()
 
@@ -104,7 +107,7 @@ def valid(
                 label = pred.to('cpu').detach().numpy().copy()
                 for thr in thresholds:
                     result = strong_label_decoding(
-                        label, item['filename'][i], 44100, 160, 1, class_map, thr
+                        label, item['filename'][i], sr, hop_length, pooling_rate, class_map, thr
                     )
                     results[thr] += result
 
