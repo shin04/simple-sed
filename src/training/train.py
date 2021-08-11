@@ -43,7 +43,7 @@ def train(
         weak_loss = criterion(weak_pred, weak_labels)
         tot_loss = strong_loss + weak_loss
 
-        strong_loss.backward()
+        tot_loss.backward()
         optimizer.step()
         train_strong_loss_sum += strong_loss.item()
         train_weak_loss_sum += weak_loss.item()
@@ -107,7 +107,7 @@ def valid(
                 label = pred.to('cpu').detach().numpy().copy()
                 for thr in thresholds:
                     result = strong_label_decoding(
-                        label, item['filename'][i], 44100, 256, class_map, thr
+                        label, item['filename'][i], 44100, 256, 4, class_map, thr
                     )
                     results[thr] += result
 

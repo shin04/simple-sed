@@ -8,6 +8,7 @@ def strong_label_encoding(
     sr: int,
     sample_len: int,
     frame_hop: int,
+    net_pooling_rate: int,
     meta_df: pd.DataFrame,
     class_map: dict
 ) -> np.array:
@@ -26,14 +27,15 @@ def strong_label_encoding(
     """
 
     frame_len = -(-sample_len // frame_hop)
+    frame_len = frame_len // net_pooling_rate
 
     label = np.zeros((frame_len, len(class_map)))
 
     for _, row in meta_df.iterrows():
         event_name = row[1]
         i = class_map[event_name]
-        onset = int(row[2]*sr / frame_hop)
-        offset = int(row[3]*sr / frame_hop)
+        onset = int(row[2]*sr / frame_hop / net_pooling_rate)
+        offset = int(row[3]*sr / frame_hop / net_pooling_rate)
         label[onset:offset, i] = 1.
 
     return label
@@ -41,7 +43,8 @@ def strong_label_encoding(
 
 def strong_label_decoding(
     preds: np.array, filename: str,
-    sr: int, frame_hop: int, class_map: dict, threshold: float = 0.5,
+    sr: int, frame_hop: int, net_pooling_rate: int,
+    class_map: dict, threshold: float = 0.5,
 ) -> list:
     """
     strong_label_decoding converts a prediction to a strong label.
@@ -62,7 +65,7 @@ def strong_label_decoding(
         pred_section = pred > threshold
         pred_section = scipy.ndimage.filters.median_filter(pred_section, 7)
         change_indices = DecisionEncoder().find_contiguous_regions(pred_section)
-        change_indices = change_indices / sr * frame_hop
+        change_indices = change_indices / sr * frame_hop * net_pooling_rate
         for indice in change_indices:
             onset = indice[0]
             offset = indice[1]

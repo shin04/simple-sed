@@ -1,4 +1,3 @@
-from tqdm import tqdm
 from pathlib import Path
 
 import numpy as np
@@ -18,6 +17,7 @@ class StrongDataset(Dataset):
         sr: int = 44100,
         sample_sec: int = 10,
         frame_hop: int = 256,
+        net_pooling_rate: int = 1,
         transforms: T.Compose = None,
     ) -> None:
         self.audio_path = audio_path
@@ -36,6 +36,7 @@ class StrongDataset(Dataset):
         self.sr = sr
         self.sample_len = sr*sample_sec
         self.frame_hop = frame_hop
+        self.net_pooling_rate = net_pooling_rate
 
         self.transforms = transforms
 
@@ -59,7 +60,7 @@ class StrongDataset(Dataset):
             waveform = self.transforms(waveform)
 
         label = strong_label_encoding(
-            self.sr, self.sample_len, self.frame_hop,
+            self.sr, self.sample_len, self.frame_hop, self.net_pooling_rate,
             self.meta_df[self.meta_df['filename'] == filename], self.class_map
         )
 
@@ -85,7 +86,8 @@ if __name__ == '__main__':
             '/home/kajiwara21/work/sed/meta/train_meta_weak.csv'),
         sr=44100,
         sample_sec=10,
-        frame_hop=256
+        frame_hop=256,
+        net_pooling_rate=4
     )
 
     print(len(dataset))

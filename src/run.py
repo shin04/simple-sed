@@ -14,7 +14,7 @@ import torchvision.transforms as T
 from model.crnn import CRNN
 from dataset.urban_sed import StrongDataset
 from training.train import train, valid
-from utils.augmentation import GaussianNoise
+# from utils.augmentation import GaussianNoise
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
@@ -39,6 +39,7 @@ def run(cfg: DictConfig) -> None:
 
     sr = cfg['dataset']['sr']
     sample_sec = cfg['dataset']['sec']
+    net_pooling_rate = cfg['dataset']['net_pooling_rate']
 
     n_epoch = cfg['training']['n_epoch']
     batch_size = cfg['training']['batch_size']
@@ -66,6 +67,7 @@ def run(cfg: DictConfig) -> None:
         weak_label_path=train_weak_label,
         sr=sr,
         sample_sec=sample_sec,
+        net_pooling_rate=net_pooling_rate,
         transforms=transforms
     )
     train_dataloader = DataLoader(
@@ -79,6 +81,7 @@ def run(cfg: DictConfig) -> None:
         weak_label_path=valid_weak_label,
         sr=sr,
         sample_sec=sample_sec,
+        net_pooling_rate=net_pooling_rate,
     )
     valid_dataloader = DataLoader(
         valid_dataset, batch_size=batch_size, shuffle=False,
