@@ -136,7 +136,7 @@ class CRNN(nn.Module):
         self.amp_to_db = audio_nn.AmplitudeToDB(stype='amplitude')
         self.amp_to_db.amin = 1e-5
 
-        # self.scaler = TorchScaler('instance', 'minmax', dims=[1, 2])
+        self.scaler = TorchScaler('instance', 'minmax', dims=[1, 2])
 
         # self.spec_aug = SpecAugmentation(
         #     time_drop_width=64, time_stripes_num=2, freq_drop_width=8, freq_stripes_num=2
@@ -163,7 +163,7 @@ class CRNN(nn.Module):
         # log_offset = 1e-6
         # x = torch.log(x + log_offset)
         x = self.amp_to_db(x).clamp(min=-50, max=80)
-        # x = self.scaler(x)
+        x = self.scaler(x)
         # x = self.spec_aug(x)
 
         x = x.transpose(1, 2).unsqueeze(1)

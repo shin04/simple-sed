@@ -10,8 +10,7 @@ import mlflow
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
     calc_sed_weak_f1,
-    calc_sed_eval_metrics,
-    calc_psds_eval_metrics
+    calc_sed_eval_metrics
 )
 
 
@@ -70,9 +69,7 @@ def valid(
     criterion: nn.Module,
     class_map: dict,
     thresholds: list,
-    psds_params: dict,
     meta_strong: Path,
-    meta_duration: Path,
 ) -> Union[float, float]:
     model.eval()
 
@@ -115,22 +112,6 @@ def valid(
             meta_strong, MetaDataContainer(results[0.5]), 0.1, 0.2
         )
 
-        psds_eval_list, psds_macro_f1_list = [], []
-        for i in range(psds_params['val_num']):
-            psds_eval, psds_macro_f1 = calc_psds_eval_metrics(
-                meta_strong,
-                meta_duration,
-                results,
-                dtc_threshold=psds_params['dtc_thresholds'][i],
-                gtc_threshold=psds_params['gtc_thresholds'][i],
-                cttc_threshold=psds_params['cttc_thresholds'][i],
-                alpha_ct=psds_params['alpha_cts'][i],
-                alpha_st=psds_params['alpha_sts'][i],
-            )
-
-            psds_eval_list.append(psds_eval)
-            psds_macro_f1_list.append(psds_macro_f1)
-
         valid_strong_loss = valid_strong_loss_sum / n_batch
         valid_weak_loss = valid_weak_loss_sum / n_batch
         valid_tot_loss = valid_tot_loss_sum / n_batch
@@ -140,8 +121,6 @@ def valid(
         valid_strong_loss,
         valid_weak_loss,
         valid_tot_loss,
-        psds_eval_list,
-        psds_macro_f1_list,
         valid_weak_f1,
         sed_evals,
     )

@@ -125,14 +125,11 @@ def run(cfg: DictConfig) -> None:
                 valid_strong_loss,
                 valid_weak_loss,
                 valid_tot_loss,
-                psds_score_list,
-                psds_macro_f1_list,
                 valid_weak_f1,
                 valid_sed_evals
             ) = valid(
                 model, valid_dataloader, device, criterion,
-                valid_dataset.class_map, thresholds, psds_params,
-                valid_meta, valid_duration,
+                valid_dataset.class_map, thresholds, valid_meta
             )
 
             mlflow.log_metric('train/strong/loss',
@@ -176,17 +173,6 @@ def run(cfg: DictConfig) -> None:
                 f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}',
                 f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}',
             )
-
-            print('[VALID SCORE]')
-            for i in range(cfg['validation']['psds']['val_num']):
-                score = psds_score_list[i]
-                f1 = psds_macro_f1_list[i]
-                print(
-                    f'psds score ({i}):{score: .4f}, '
-                    f'macro f1 ({i}):{f1: .4f}'
-                )
-                mlflow.log_metric(f'valid/psds_score/{i}', score, step=epoch)
-                mlflow.log_metric(f'valid/psds_macro_f1/{i}', f1, step=epoch)
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
