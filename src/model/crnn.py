@@ -3,7 +3,7 @@ import yaml
 import torch
 import torch.nn as nn
 import torchaudio.transforms as audio_nn
-from torchlibrosa.augmentation import SpecAugmentation
+# from torchlibrosa.augmentation import SpecAugmentation
 
 from torchinfo import summary
 from utils.scaler import TorchScaler
@@ -146,12 +146,12 @@ class CRNN(nn.Module):
         self.rnn = BidirectionalGRU(**rnn_cfg)
 
         self.dropout = nn.Dropout(dropout_rate)
-        self.dense = nn.Linear(128 * 2, out_features)
+        self.dense = nn.Linear(rnn_cfg['hidden_size'] * 2, out_features)
         self.sigmoid = nn.Sigmoid()
 
         self.attention = attention
         if attention:
-            self.att_dense = nn.Linear(128 * 2, out_features)
+            self.att_dense = nn.Linear(rnn_cfg['hidden_size'] * 2, out_features)
             self.att_softmax = nn.Softmax(dim=-1)
 
     def forward(self, input):
@@ -194,7 +194,7 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
-    with open('../config/urban_sed_2.yaml') as yml:
+    with open('../config/urban_sed.yaml') as yml:
         conf = yaml.load(yml)
 
     model_conf = conf['model']
