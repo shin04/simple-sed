@@ -14,16 +14,6 @@ from .metrics import (
 )
 
 
-def generate_gt(targets, filenames, sr, hop_length,  pooling_rate, class_map, thr):
-    for i, target in enumerate(targets):
-        label = target.to('cpu').detach().numpy().copy()
-        gt = strong_label_decoding(
-            label, filenames[i], sr, hop_length, pooling_rate, class_map, thr
-        )
-
-    return gt
-
-
 def test(
     model: nn.Module,
     dataloader: DataLoader,
@@ -42,7 +32,6 @@ def test(
     n_batch = len(dataloader)
     weak_f1_sum = 0
     results = {}
-    gt = []
     for thr in thresholds:
         results[thr] = []
 
@@ -54,11 +43,6 @@ def test(
             strong_pred, weak_pred = model(data)
 
             weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred)
-
-            # generate ground truth df
-            gt += generate_gt(
-                strong_pred, item['filename'], sr, hop_length, pooling_rate, class_map, 0.5
-            )
 
             for i, pred in enumerate(strong_pred):
                 label = pred.to('cpu').detach().numpy().copy()
@@ -75,8 +59,7 @@ def test(
         psds_eval_list, psds_macro_f1_list = [], []
         for i in range(psds_params['val_num']):
             psds_eval, psds_macro_f1 = calc_psds_eval_metrics(
-                # meta_strong,
-                gt,
+                meta_strong,
                 meta_duration,
                 results,
                 dtc_threshold=psds_params['dtc_thresholds'][i],

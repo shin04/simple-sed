@@ -66,8 +66,6 @@ class StrongDataset(Dataset):
         )
 
         # waveform = waveform.reshape(1, -1)
-        # FIXME
-        waveform = waveform[:, :1000]
 
         item = {
             'filename': filename,
