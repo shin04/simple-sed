@@ -16,14 +16,14 @@ from model.crnn import CRNN
 from dataset.urban_sed import StrongDataset
 from training.train import train, valid
 from training.test import test
-# from utils.augmentation import GaussianNoise
+from utils.transformers import GetMelSpectrogram
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
 TIME_TEMPLATE = '%Y%m%d%H%M%S'
 
 
-@hydra.main(config_path='../config', config_name='urban_sed.yaml')
+@hydra.main(config_path='../config', config_name='fix_baseline.yaml')
 def run(cfg: DictConfig) -> None:
     ts = datetime.now().strftime(TIME_TEMPLATE)
 
@@ -65,8 +65,8 @@ def run(cfg: DictConfig) -> None:
     psds_params = cfg['validation']['psds']
 
     """prepare datasets"""
-    # transforms = T.Compose([GaussianNoise()])
-    transforms = T.Compose([])
+    get_melspec = GetMelSpectrogram(sr=sr, **cfg['feature'], log_scale=True)
+    transforms = T.Compose([get_melspec])
 
     train_dataset = StrongDataset(
         audio_path=audio_path / 'train',
@@ -91,6 +91,7 @@ def run(cfg: DictConfig) -> None:
         frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
+        transforms=transforms
     )
     valid_dataloader = DataLoader(
         valid_dataset, batch_size=batch_size, shuffle=False,
@@ -102,8 +103,6 @@ def run(cfg: DictConfig) -> None:
 
     """prepare training"""
     model = CRNN(
-        sr=sr,
-        **cfg['feature'],
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
@@ -119,7 +118,7 @@ def run(cfg: DictConfig) -> None:
     mlflow.set_tracking_uri(
         "file://" + hydra.utils.get_original_cwd() + "/../log/mlruns")
     mlflow.set_experiment(ex_name)
-    with mlflow.start_run():
+    with mlflow.start_run(run_name=str(ts)):
         log_params_from_omegaconf_dict(dict(cfg))
         for epoch in range(n_epoch):
             start = time.time()
@@ -203,14 +202,13 @@ def run(cfg: DictConfig) -> None:
         frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
+        transforms=transforms
     )
     test_dataloader = DataLoader(
         test_dataset, batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=pin_memory
     )
     model = CRNN(
-        sr=sr,
-        **cfg['feature'],
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
@@ -245,6 +243,8 @@ def run(cfg: DictConfig) -> None:
             f'psds score ({i}):{score: .4f}, '
             f'macro f1 ({i}):{f1: .4f}'
         )
+
+    print(f'ex "{str(ts)}" complete !!')
 
 
 if __name__ == '__main__':

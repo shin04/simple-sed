@@ -96,6 +96,7 @@ def calc_psds_eval_metrics(
     max_efpr: float = 100,
 ) -> dict:
     gt_df = pd.read_csv(gt_path)
+
     meta_df = pd.read_csv(meta_path)  # cols=[filename, duration]
 
     psds_eval = PSDSEval(

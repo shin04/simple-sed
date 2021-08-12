@@ -56,6 +56,7 @@ class StrongDataset(Dataset):
         else:
             waveform = waveform[:self.sample_len]
 
+        waveform = torch.from_numpy(waveform).float()
         if self.transforms is not None:
             waveform = self.transforms(waveform)
 
@@ -68,7 +69,7 @@ class StrongDataset(Dataset):
 
         item = {
             'filename': filename,
-            'waveform': torch.from_numpy(waveform).float(),
+            'waveform': waveform,
             'target': torch.from_numpy(label.T).float(),
             'weak_label': torch.from_numpy(self.weak_labels[idx]).float()
         }
