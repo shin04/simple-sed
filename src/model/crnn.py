@@ -161,18 +161,12 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
-    with open('../config/urban_sed_2.yaml') as yml:
+    with open('../config/baseline.yaml') as yml:
         conf = yaml.load(yml)
 
     model_conf = conf['model']
-    feat_conf = conf['feature']
     model = CRNN(
-        sr=conf['dataset']['sr'],
-        n_filters=feat_conf['n_filters'],
-        n_window=feat_conf['n_window'],
-        hop_length=feat_conf['hop_length'],
-        n_mels=feat_conf['n_mels'],
         cnn_cfg=model_conf['cnn'],
         rnn_cfg=model_conf['rnn']
     ).cpu()
-    summary(model, input_size=(8, 1, 1000, 64))
+    summary(model, input_size=(8, 128, 1000))
