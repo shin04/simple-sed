@@ -2,11 +2,8 @@ import yaml
 
 import torch
 import torch.nn as nn
-import torchaudio.transforms as audio_nn
-# from torchlibrosa.augmentation import SpecAugmentation
 
 from torchinfo import summary
-from utils.scaler import TorchScaler
 
 
 class ConvBlock(nn.Module):
@@ -113,11 +110,6 @@ class BidirectionalGRU(nn.Module):
 class CRNN(nn.Module):
     def __init__(
         self,
-        sr: int,
-        n_filters: int,
-        n_window: int,
-        hop_length: int,
-        n_mels: int,
         cnn_cfg: dict = {},
         rnn_cfg: dict = {},
         dropout_rate: float = 0.5,
@@ -125,22 +117,6 @@ class CRNN(nn.Module):
         attention: bool = True,
     ) -> None:
         super(CRNN, self).__init__()
-
-        self.mel_spec_trans = audio_nn.MelSpectrogram(
-            sample_rate=sr,
-            n_fft=n_filters,
-            win_length=n_window,
-            hop_length=hop_length,
-            n_mels=n_mels
-        )
-        self.amp_to_db = audio_nn.AmplitudeToDB(stype='amplitude')
-        self.amp_to_db.amin = 1e-5
-
-        self.scaler = TorchScaler('instance', 'minmax', dims=[1, 2])
-
-        # self.spec_aug = SpecAugmentation(
-        #     time_drop_width=64, time_stripes_num=2, freq_drop_width=8, freq_stripes_num=2
-        # )
 
         self.cnn = CNN(**cnn_cfg)
         self.rnn = BidirectionalGRU(**rnn_cfg)
@@ -159,17 +135,8 @@ class CRNN(nn.Module):
         input: waveform (batch_size, frames)
         """
 
-        x = self.mel_spec_trans(input)
-        # log_offset = 1e-6
-        # x = torch.log(x + log_offset)
-        x = self.amp_to_db(x).clamp(min=-50, max=80)
-        x = self.scaler(x)
-        # x = self.spec_aug(x)
+        x = input.transpose(1, 2).unsqueeze(1)
 
-        x = x.transpose(1, 2).unsqueeze(1)
-
-        # (batch_size, channels, freq, frames) > (batch_size, channels, frames, freq)
-        # x = x.transpose(3, 2)
         x = self.cnn(x)
 
         # (batch_size, channels, frames, freq) > (batch_size, frames, channels)
@@ -194,7 +161,7 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
-    with open('../config/urban_sed.yaml') as yml:
+    with open('../config/urban_sed_2.yaml') as yml:
         conf = yaml.load(yml)
 
     model_conf = conf['model']
@@ -208,10 +175,4 @@ if __name__ == '__main__':
         cnn_cfg=model_conf['cnn'],
         rnn_cfg=model_conf['rnn']
     ).cpu()
-    # model = CRNN(
-    #     44100, 2048, 2048, 256, 128
-    # ).cpu()
-    summary(model, input_size=(8, 44100*10))
-
-    # cnn = CNN().cpu()
-    # summary(cnn, input_size=(8, 1, 1723, 128))
+    summary(model, input_size=(8, 1, 1000, 64))

@@ -85,7 +85,8 @@ def calc_sed_eval_metrics(
 
 
 def calc_psds_eval_metrics(
-    gt_path: Path,
+    # gt_path: Path,
+    gt: np.ndarray,
     meta_path: Path,
     predictions: dict,
     dtc_threshold: float = 0.5,
@@ -95,7 +96,9 @@ def calc_psds_eval_metrics(
     alpha_st: float = 0,
     max_efpr: float = 100,
 ) -> dict:
-    gt_df = pd.read_csv(gt_path)
+    # gt_df = pd.read_csv(gt_path)
+    gt_df = pd.DataFrame(gt)
+
     meta_df = pd.read_csv(meta_path)  # cols=[filename, duration]
 
     psds_eval = PSDSEval(

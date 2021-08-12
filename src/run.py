@@ -16,7 +16,7 @@ from model.crnn import CRNN
 from dataset.urban_sed import StrongDataset
 from training.train import train, valid
 from training.test import test
-# from utils.augmentation import GaussianNoise
+from utils.transformers import GetMelSpectrogram
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
@@ -65,8 +65,8 @@ def run(cfg: DictConfig) -> None:
     psds_params = cfg['validation']['psds']
 
     """prepare datasets"""
-    # transforms = T.Compose([GaussianNoise()])
-    transforms = T.Compose([])
+    get_melspec = GetMelSpectrogram(sr=sr, **cfg['feature'], log_scale=True)
+    transforms = T.Compose([get_melspec])
 
     train_dataset = StrongDataset(
         audio_path=audio_path / 'train',
@@ -91,6 +91,7 @@ def run(cfg: DictConfig) -> None:
         frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
+        transforms=transforms
     )
     valid_dataloader = DataLoader(
         valid_dataset, batch_size=batch_size, shuffle=False,
@@ -102,8 +103,6 @@ def run(cfg: DictConfig) -> None:
 
     """prepare training"""
     model = CRNN(
-        sr=sr,
-        **cfg['feature'],
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
@@ -203,14 +202,13 @@ def run(cfg: DictConfig) -> None:
         frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
+        transforms=transforms
     )
     test_dataloader = DataLoader(
         test_dataset, batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=pin_memory
     )
     model = CRNN(
-        sr=sr,
-        **cfg['feature'],
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
