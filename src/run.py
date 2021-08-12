@@ -23,7 +23,7 @@ from utils.param_util import log_params_from_omegaconf_dict
 TIME_TEMPLATE = '%Y%m%d%H%M%S'
 
 
-@hydra.main(config_path='../config', config_name='urban_sed.yaml')
+@hydra.main(config_path='../config', config_name='fix_baseline.yaml')
 def run(cfg: DictConfig) -> None:
     ts = datetime.now().strftime(TIME_TEMPLATE)
 
@@ -118,7 +118,7 @@ def run(cfg: DictConfig) -> None:
     mlflow.set_tracking_uri(
         "file://" + hydra.utils.get_original_cwd() + "/../log/mlruns")
     mlflow.set_experiment(ex_name)
-    with mlflow.start_run():
+    with mlflow.start_run(run_name=str(ts)):
         log_params_from_omegaconf_dict(dict(cfg))
         for epoch in range(n_epoch):
             start = time.time()
@@ -243,6 +243,8 @@ def run(cfg: DictConfig) -> None:
             f'psds score ({i}):{score: .4f}, '
             f'macro f1 ({i}):{f1: .4f}'
         )
+
+    print(f'ex "{str(ts)}" complete !!')
 
 
 if __name__ == '__main__':
