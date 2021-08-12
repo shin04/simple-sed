@@ -14,7 +14,7 @@ dataset:
   test_duration: "/ml/meta/test_meta_duration.csv"
   sr: 44100
   sec: 10
-  net_pooling_rate: 1
+  net_pooling_rate: 4
 
 feature:
   n_filters: 2048
@@ -34,13 +34,13 @@ training:
 model:
   save_path: "/ml/models"
   cnn:
-    num_layers: 4
+    num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
     in_channels: 1
     conv_filters: [128, 128, 128, 128]
-    kernel_sizes: [3, 3, 3, 3]
-    strides: [1, 1, 1, 1]
-    paddings: [1, 1, 1, 1]
-    poolings: [[1, 4], [1, 4], [1, 4], [1, 2]]
+    kernel_sizes: [3, 3, 3, 3, 3]
+    strides: [1, 1, 1, 1, 1]
+    paddings: [1, 1, 1, 1, 1]
+    poolings: [[2, 4], [2, 4], [1, 4], [1, 2]]
     dropout_rate: 0.5
   rnn:
     input_size: 128

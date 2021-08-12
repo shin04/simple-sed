@@ -23,13 +23,15 @@ from utils.param_util import log_params_from_omegaconf_dict
 TIME_TEMPLATE = '%Y%m%d%H%M%S'
 
 
-@hydra.main(config_path='../config', config_name='fix_baseline.yaml')
+@hydra.main(config_path='../config', config_name='baseline.yaml')
 def run(cfg: DictConfig) -> None:
     ts = datetime.now().strftime(TIME_TEMPLATE)
 
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
+
+    print(f'start {ex_name} {str(ts)}')
 
     audio_path = Path(cfg['dataset']['audio_path'])
     train_meta = Path(cfg['dataset']['train_meta'])
