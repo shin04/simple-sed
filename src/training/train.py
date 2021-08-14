@@ -4,8 +4,8 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from dcase_util.containers import MetaDataContainer
 import mlflow
+import pandas as pd
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
@@ -112,13 +112,16 @@ def valid(
                     results[thr] += result
 
         sed_evals = calc_sed_eval_metrics(
-            meta_strong, MetaDataContainer(results[0.5]), 0.1, 0.2
+            meta_strong, pd.DataFrame(results[0.5]), 0.1, 0.2
         )
 
         valid_strong_loss = valid_strong_loss_sum / n_batch
         valid_weak_loss = valid_weak_loss_sum / n_batch
         valid_tot_loss = valid_tot_loss_sum / n_batch
         valid_weak_f1 = weak_f1_sum / n_batch
+
+    res_df = pd.DataFrame(results[0.5])
+    res_df.to_csv('../prediction.csv', index=False)
 
     return (
         valid_strong_loss,

@@ -6,7 +6,6 @@ from sklearn import metrics
 import torch
 from sed_eval.sound_event import SegmentBasedMetrics, EventBasedMetrics
 from psds_eval import PSDSEval
-from dcase_util.containers import MetaDataContainer
 
 
 def sed_average_precision(
@@ -41,23 +40,48 @@ def calc_sed_weak_f1(weak_label: torch.Tensor, pred: torch.Tensor, average: str 
     return f1_score
 
 
+def get_event_list_current_file(df: pd.DataFrame, fname: str) -> list:
+    event_file = df[df["filename"] == fname]
+    if len(event_file) == 1:
+        if pd.isna(event_file["event_label"].iloc[0]):
+            event_list_for_current_file = [{"filename": fname}]
+        else:
+            event_list_for_current_file = event_file.to_dict("records")
+    else:
+        event_list_for_current_file = event_file.to_dict("records")
+
+    return event_list_for_current_file
+
+
 def calc_sed_eval_metrics(
-    metadata_path: Path, prediction: MetaDataContainer, time_resolution: float, t_collar: float
+    metadata_path: Path,
+    prediction: pd.DataFrame,
+    time_resolution: float,
+    t_collar: float
 ) -> dict:
     meta_df = pd.read_csv(metadata_path)
-    grand_truth = MetaDataContainer(meta_df.to_dict('records'))
+    grand_truth = meta_df
+
+    evaluated_files = meta_df["filename"].unique()
+    classes = []
+    classes.extend(meta_df.event_label.dropna().unique())
+    classes.extend(prediction.event_label.dropna().unique())
+    classes = sorted(list(set(classes)))
 
     segment_based_metrics = SegmentBasedMetrics(
-        event_label_list=grand_truth.unique_event_labels, time_resolution=time_resolution
+        event_label_list=classes,
+        time_resolution=time_resolution
     )
 
     event_based_metrics = EventBasedMetrics(
-        event_label_list=grand_truth.unique_event_labels, t_collar=t_collar
+        event_label_list=classes,
+        t_collar=t_collar
     )
 
-    for filename in grand_truth.unique_files:
-        grand_truth_files = grand_truth.filter(filename=filename)
-        prediction_files = prediction.filter(filename=filename)
+    # for filename in grand_truth.unique_files:
+    for filename in evaluated_files:
+        grand_truth_files = get_event_list_current_file(grand_truth, filename)
+        prediction_files = get_event_list_current_file(prediction, filename)
 
         segment_based_metrics.evaluate(
             reference_event_list=grand_truth_files,
@@ -132,3 +156,44 @@ def calc_psds_eval_metrics(
         alpha_ct=alpha_ct, alpha_st=alpha_st, max_efpr=max_efpr)
 
     return psds_score.value, psds_macro_f1
+
+
+# def search_best_threshold(
+#     step: float,
+#     meta_path, est_df, target="Event"
+# ) -> float:
+#     assert 0 < step < 1.0
+#     assert target in ["Event", "Frame"]
+
+#     best_th = {k: 0.0 for k in labels}
+#     best_f1 = {k: 0.0 for k in labels}
+
+#     for th in np.arange(step, 1.0, step):
+#         sed_metrics = calc_sed_eval_metrics(
+#             meta_path, est_df, 0.1, 0.2
+#         )
+#         events_metric = sed_metrics['event']
+
+#         for i, label in enumerate(labels):
+#             f1 = events_metric.class_wise_f_measure(event_label=label)["f_measure"]
+#             if f1 > best_f1[label]:
+#                 best_th[label] = th
+#                 best_f1[label] = f1
+
+#     thres_list = [0.5] * len(labels)
+#     for i, label in enumerate(labels):
+#         thres_list[i] = best_th[label]
+
+#     return best_th
+
+
+if __name__ == '__main__':
+    meta_path = '/home/kajiwara21/work/sed/meta/valid_meta_strong.csv'
+    est_df = pd.read_csv('/home/kajiwara21/work/sed/prediction.csv')
+
+    res = calc_sed_eval_metrics(
+        meta_path, est_df, 0.1, 0.2
+    )
+
+    print(res['segment'])
+    print(res['event'])

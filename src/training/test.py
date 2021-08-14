@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from dcase_util.containers import MetaDataContainer
+import pandas as pd
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
@@ -53,7 +53,7 @@ def test(
                     results[thr] += result
 
         sed_evals = calc_sed_eval_metrics(
-            meta_strong, MetaDataContainer(results[0.5]), 0.1, 0.2
+            meta_strong, pd.DataFrame(results[0.5]), 0.1, 0.2
         )
 
         psds_eval_list, psds_macro_f1_list = [], []
