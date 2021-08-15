@@ -198,10 +198,6 @@ def search_best_threshold(
                 best_th[label] = th
                 best_f1[label] = f1
 
-    thres_list = [0.5] * len(labels)
-    for i, label in enumerate(labels):
-        thres_list[i] = best_th[label]
-
     return best_th, best_f1
 
 

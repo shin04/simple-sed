@@ -110,7 +110,7 @@ def valid(
             for i, pred in enumerate(strong_pred):
                 pred = pred.to('cpu').detach().numpy().copy()
 
-                preds[ite*n_batch + i] = pred
+                preds[ite*len(strong_pred) + i] = pred
                 filenames.append(item['filename'][i])
 
                 for thr in thresholds:

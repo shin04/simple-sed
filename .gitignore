@@ -4,6 +4,7 @@ __pycache__
 /log/
 /meta*/
 /models/
+/results/
 /notebooks/
 /*env/
 /src/outputs/
