@@ -70,6 +70,7 @@ def valid(
     criterion: nn.Module,
     class_map: dict,
     thresholds: list,
+    sed_eval_thr: float,
     meta_strong: Path,
     sr: int,
     hop_length: int,
@@ -105,7 +106,7 @@ def valid(
             valid_weak_loss_sum += weak_loss.item()
             valid_tot_loss_sum += tot_loss.item()
 
-            weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred)
+            weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred, sed_eval_thr)
 
             for i, pred in enumerate(strong_pred):
                 pred = pred.to('cpu').detach().numpy().copy()
@@ -120,7 +121,7 @@ def valid(
                     results[thr] += result
 
         sed_evals = calc_sed_eval_metrics(
-            meta_strong, pd.DataFrame(results[0.5]), 0.1, 0.2
+            meta_strong, pd.DataFrame(results[sed_eval_thr]), 0.1, 0.2
         )
 
         valid_strong_loss = valid_strong_loss_sum / n_batch
