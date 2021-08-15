@@ -5,12 +5,13 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import mlflow
+import numpy as np
 import pandas as pd
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
     calc_sed_weak_f1,
-    calc_sed_eval_metrics
+    calc_sed_eval_metrics,
 )
 
 
@@ -82,11 +83,14 @@ def valid(
     valid_tot_loss_sum = 0
     weak_f1_sum = 0
     results = {}
+    preds = np.zeros(
+        (len(dataloader.dataset), *dataloader.dataset[0]['target'].shape))
+    filenames = []
     for thr in thresholds:
         results[thr] = []
 
     with torch.no_grad():
-        for _, item in enumerate(dataloader):
+        for ite, item in enumerate(dataloader):
             data = item['waveform'].to(device)
             labels = item['target'].to(device)
             weak_labels = item['weak_label'].to(device)
@@ -104,10 +108,14 @@ def valid(
             weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred)
 
             for i, pred in enumerate(strong_pred):
-                label = pred.to('cpu').detach().numpy().copy()
+                pred = pred.to('cpu').detach().numpy().copy()
+
+                preds[ite*n_batch + i] = pred
+                filenames.append(item['filename'][i])
+
                 for thr in thresholds:
                     result = strong_label_decoding(
-                        label, item['filename'][i], sr, hop_length, pooling_rate, class_map, thr
+                        pred, item['filename'][i], sr, hop_length, pooling_rate, class_map, thr
                     )
                     results[thr] += result
 
@@ -120,8 +128,7 @@ def valid(
         valid_tot_loss = valid_tot_loss_sum / n_batch
         valid_weak_f1 = weak_f1_sum / n_batch
 
-    res_df = pd.DataFrame(results[0.5])
-    res_df.to_csv('../prediction.csv', index=False)
+        pred_dict = dict(zip(filenames, preds))
 
     return (
         valid_strong_loss,
@@ -129,4 +136,5 @@ def valid(
         valid_tot_loss,
         valid_weak_f1,
         sed_evals,
+        pred_dict
     )
