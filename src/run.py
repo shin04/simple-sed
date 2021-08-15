@@ -6,6 +6,7 @@ from datetime import datetime
 import hydra
 import mlflow
 from omegaconf import DictConfig
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -133,7 +134,8 @@ def run(cfg: DictConfig) -> None:
                 valid_weak_loss,
                 valid_tot_loss,
                 valid_weak_f1,
-                valid_sed_evals
+                valid_sed_evals,
+                pred_dict
             ) = valid(
                 model, valid_dataloader, device, criterion,
                 valid_dataset.class_map, thresholds, valid_meta,
@@ -184,6 +186,7 @@ def run(cfg: DictConfig) -> None:
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
+                np.save('./prediction.npy', pred_dict)
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
