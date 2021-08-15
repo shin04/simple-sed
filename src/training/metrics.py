@@ -31,11 +31,16 @@ def sed_average_precision(
     return average_precision
 
 
-def calc_sed_weak_f1(weak_label: torch.Tensor, pred: torch.Tensor, average: str = 'macro') -> float:
+def calc_sed_weak_f1(
+    weak_label: torch.Tensor,
+    pred: torch.Tensor,
+    thr: float,
+    average: str = 'macro'
+) -> float:
     weak_label = weak_label.to('cpu').detach().numpy().copy()
     pred = pred.to('cpu').detach().numpy().copy()
 
-    pred = pred > 0.5
+    pred = pred > thr
 
     f1_score = metrics.f1_score(weak_label, pred, average=average)
 
@@ -194,11 +199,12 @@ def search_best_threshold(
 
         for i, label in enumerate(labels):
             f1 = events_metric.class_wise_f_measure(event_label=label)["f_measure"]
+
             if f1 > best_f1[label]:
                 best_th[label] = th
                 best_f1[label] = f1
 
-    return best_th, best_f1
+    return best_th
 
 
 if __name__ == '__main__':

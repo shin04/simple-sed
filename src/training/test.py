@@ -28,17 +28,10 @@ def decide_class_threshold(
     preds = list(pred_dict.values())
     filenames = list(pred_dict.keys())
 
-    best_th, best_f1 = search_best_threshold(
+    best_th = search_best_threshold(
         0.1, meta_strong, preds, filenames,
         sr, hop_length, pooling_rate, class_map
     )
-
-    # labels = class_map.keys()
-    # thres_list = [0.5] * len(labels)
-    # for i, label in enumerate(labels):
-    #     thres_list[i] = best_th[label]
-
-    # return thres_list,
 
     return best_th
 
@@ -49,6 +42,7 @@ def test(
     device: torch.device,
     class_map: dict,
     thresholds: list,
+    sed_eval_thr: float,
     psds_params: dict,
     meta_strong: Path,
     meta_duration: Path,
@@ -62,43 +56,53 @@ def test(
     n_batch = len(dataloader)
     weak_f1_sum = 0
     results = {}
-    best_results = []
+    # best_results = []
+    preds = np.zeros(
+        (len(dataloader.dataset), *dataloader.dataset[0]['target'].shape))
+    filenames = []
     for thr in thresholds:
         results[thr] = []
 
     with torch.no_grad():
-        for _, item in enumerate(dataloader):
+        for ite, item in enumerate(dataloader):
             data = item['waveform'].to(device)
             weak_labels = item['weak_label'].to(device)
 
             strong_pred, weak_pred = model(data)
 
-            weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred)
+            weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred, sed_eval_thr)
 
             for i, pred in enumerate(strong_pred):
-                label = pred.to('cpu').detach().numpy().copy()
+                pred = pred.to('cpu').detach().numpy().copy()
+
+                preds[ite*len(strong_pred) + i] = pred
+                filenames.append(item['filename'][i])
+
                 for thr in thresholds:
                     result = strong_label_decoding(
-                        label, item['filename'][i],
+                        pred, item['filename'][i],
                         sr, hop_length, pooling_rate, class_map,
                         thr
                     )
                     results[thr] += result
 
-                best_results += strong_label_decoding(
-                    label, item['filename'][i],
-                    sr, hop_length, pooling_rate, class_map,
-                    best_th,
-                )
+                # best_results += strong_label_decoding(
+                #     pred, item['filename'][i],
+                #     sr, hop_length, pooling_rate, class_map,
+                #     best_th,
+                # )
 
-        best_sed_evals = calc_sed_eval_metrics(
-            meta_strong, pd.DataFrame(best_results), 0.1, 0.2
-        )
-        print(best_sed_evals)
+        # best_sed_evals = calc_sed_eval_metrics(
+        #     meta_strong, pd.DataFrame(best_results), 0.1, 0.2
+        # )
+        # print('valid best sed evals', best_sed_evals)
 
-        sed_evals = calc_sed_eval_metrics(
-            meta_strong, pd.DataFrame(results[0.5]), 0.1, 0.2
-        )
+        sed_evals = {}
+        for thr in thresholds:
+            sed_evals[thr] = calc_sed_eval_metrics(
+                meta_strong, pd.DataFrame(results[thr]), 0.1, 0.2
+            )
+        print(sed_eval_thr)
 
         psds_eval_list, psds_macro_f1_list = [], []
         for i in range(psds_params['val_num']):
@@ -118,9 +122,12 @@ def test(
 
         weak_f1 = weak_f1_sum / n_batch
 
+        pred_dict = dict(zip(filenames, preds))
+
     return (
         psds_eval_list,
         psds_macro_f1_list,
         weak_f1,
-        sed_evals,
+        sed_evals[sed_eval_thr],
+        pred_dict
     )

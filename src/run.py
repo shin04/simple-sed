@@ -16,7 +16,7 @@ import torchvision.transforms as T
 from model.crnn import CRNN
 from dataset.urban_sed import StrongDataset
 from training.train import train, valid
-from training.test import test, decide_class_threshold
+from training.test import test  # , decide_class_threshold
 from utils.transformers import GetMelSpectrogram
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
@@ -33,7 +33,7 @@ def run(cfg: DictConfig) -> None:
     device = torch.device(cfg['device'])
     print(f'start {ex_name} {str(ts)}')
 
-    result_path = Path(cfg['result']['vaild_pred_dir']) / f'{ex_name}-valid.npy'
+    result_path = Path(cfg['result']['vaild_pred_dir'])
 
     audio_path = Path(cfg['dataset']['audio_path'])
     train_meta = Path(cfg['dataset']['train_meta'])
@@ -66,7 +66,7 @@ def run(cfg: DictConfig) -> None:
     es_patience = cfg['training']['early_stop_patience']
     thresholds = cfg['training']['thresholds']
 
-    psds_params = cfg['validation']['psds']
+    psds_params = cfg['evaluate']['psds']
 
     """prepare datasets"""
     get_melspec = GetMelSpectrogram(sr=sr, **cfg['feature'], log_scale=True)
@@ -130,16 +130,14 @@ def run(cfg: DictConfig) -> None:
             train_strong_loss, train_weak_loss, train_tot_loss = train(
                 global_step, model, train_dataloader, device, optimizer, criterion
             )
+
             (
-                valid_strong_loss,
-                valid_weak_loss,
-                valid_tot_loss,
-                valid_weak_f1,
-                valid_sed_evals,
-                pred_dict
+                valid_strong_loss, valid_weak_loss, valid_tot_loss,
+                valid_weak_f1, valid_sed_evals, pred_dict
             ) = valid(
                 model, valid_dataloader, device, criterion,
-                valid_dataset.class_map, thresholds, valid_meta,
+                valid_dataset.class_map, thresholds,
+                cfg['training']['sed_eval_thr'], valid_meta,
                 sr, hop_length, net_pooling_rate
             )
 
@@ -187,7 +185,7 @@ def run(cfg: DictConfig) -> None:
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
-                np.save(result_path, pred_dict)
+                np.save(result_path / f'{ex_name}-valid.npy', pred_dict)
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
@@ -223,19 +221,24 @@ def run(cfg: DictConfig) -> None:
     ).to(device)
     model.load_state_dict(torch.load(model_path))
 
-    best_th = decide_class_threshold(
-        result_path, valid_meta, sr, hop_length, net_pooling_rate,
-        valid_dataset.class_map
-    )
+    # best_th = decide_class_threshold(
+    #     result_path / f'{ex_name}-valid.npy', valid_meta, sr, hop_length, net_pooling_rate,
+    #     valid_dataset.class_map
+    # )
+    # print('best valid thresholds', best_th)
     (
         test_psds_eval_list,
         test_psds_macro_f1_list,
         test_weak_f1,
         test_sed_evals,
+        test_pred_dict
     ) = test(
-        model, test_dataloader, device, test_dataset.class_map, thresholds,
+        model, test_dataloader, device, test_dataset.class_map,
+        cfg['evaluate']['thresholds'],
         psds_params, test_meta, test_duration,
-        sr, hop_length, net_pooling_rate, best_th
+        sr, hop_length, net_pooling_rate,
+        # best_th
+        {}
     )
 
     print(
@@ -255,6 +258,8 @@ def run(cfg: DictConfig) -> None:
             f'psds score ({i}):{score: .4f}, '
             f'macro f1 ({i}):{f1: .4f}'
         )
+
+    np.save(result_path / f'{ex_name}-test.npy', test_pred_dict)
 
     print(f'ex "{str(ts)}" complete !!')
 
