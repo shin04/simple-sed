@@ -185,7 +185,7 @@ def run(cfg: DictConfig) -> None:
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
-                np.save(result_path / f'{ex_name}-valid.npy', pred_dict)
+                np.save(result_path / f'{ex_name}-{ts}-valid.npy', pred_dict)
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
@@ -234,7 +234,7 @@ def run(cfg: DictConfig) -> None:
         test_pred_dict
     ) = test(
         model, test_dataloader, device, test_dataset.class_map,
-        cfg['evaluate']['thresholds'],
+        cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
         psds_params, test_meta, test_duration,
         sr, hop_length, net_pooling_rate,
         # best_th
@@ -259,7 +259,7 @@ def run(cfg: DictConfig) -> None:
             f'macro f1 ({i}):{f1: .4f}'
         )
 
-    np.save(result_path / f'{ex_name}-test.npy', test_pred_dict)
+    np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 
     print(f'ex "{str(ts)}" complete !!')
 
