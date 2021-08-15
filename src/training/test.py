@@ -24,14 +24,23 @@ def decide_class_threshold(
     pooling_rate: int,
     class_map: dict
 ):
-    pred_dict = np.load(pred_dir, allow_pickle=True)
-    preds = pred_dict.item().values()
-    filenames = pred_dict.item().keys()
+    pred_dict = np.load(pred_dir, allow_pickle=True).item()
+    preds = list(pred_dict.values())
+    filenames = list(pred_dict.keys())
 
     best_th, best_f1 = search_best_threshold(
         0.1, meta_strong, preds, filenames,
         sr, hop_length, pooling_rate, class_map
     )
+
+    # labels = class_map.keys()
+    # thres_list = [0.5] * len(labels)
+    # for i, label in enumerate(labels):
+    #     thres_list[i] = best_th[label]
+
+    # return thres_list,
+
+    return best_th
 
 
 def test(
@@ -46,12 +55,14 @@ def test(
     sr: int,
     hop_length: int,
     pooling_rate: int,
+    best_th: dict
 ) -> Union[float, float]:
     model.eval()
 
     n_batch = len(dataloader)
     weak_f1_sum = 0
     results = {}
+    best_results = []
     for thr in thresholds:
         results[thr] = []
 
@@ -68,9 +79,22 @@ def test(
                 label = pred.to('cpu').detach().numpy().copy()
                 for thr in thresholds:
                     result = strong_label_decoding(
-                        label, item['filename'][i], sr, hop_length, pooling_rate, class_map, thr
+                        label, item['filename'][i],
+                        sr, hop_length, pooling_rate, class_map,
+                        thr
                     )
                     results[thr] += result
+
+                best_results += strong_label_decoding(
+                    label, item['filename'][i],
+                    sr, hop_length, pooling_rate, class_map,
+                    best_th,
+                )
+
+        best_sed_evals = calc_sed_eval_metrics(
+            meta_strong, pd.DataFrame(best_results), 0.1, 0.2
+        )
+        print(best_sed_evals)
 
         sed_evals = calc_sed_eval_metrics(
             meta_strong, pd.DataFrame(results[0.5]), 0.1, 0.2

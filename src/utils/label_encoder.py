@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-# import scipy
-from dcase_util.data import DecisionEncoder, ProbabilityEncoder
+import scipy
+from dcase_util.data import DecisionEncoder  # , ProbabilityEncoder
 
 
 def strong_label_encoding(
@@ -44,14 +44,13 @@ def strong_label_encoding(
 
 
 def strong_label_decoding(
-    preds: np.array,
+    preds: np.ndarray,
     filename: str,
     sr: int,
     frame_hop: int,
     net_pooling_rate: int,
     class_map: dict,
     threshold: float | dict = 0.5,
-    binarization_type: str = 'global_threshold'
 ) -> list:
     """
     strong_label_decoding converts a prediction to a strong label.
@@ -60,34 +59,33 @@ def strong_label_decoding(
 
     Prameters
     ---------
-    preds: (fraes, class)
+    preds: (frames, class)
     binarization_type:
         global_threshold or class_threshold
     """
 
     classes = list(class_map.keys())
+
+    # generate threshold list
+    th_list = []
+    if type(threshold) == float:
+        th_list = [threshold] * len(class_map)
+    else:
+        for cls in classes:
+            th_list.append(threshold[cls])
+
     result_label = []
     for i, pred in enumerate(preds):
         event = classes[i]
 
-        # pred_section = pred > threshold
-        # pred_section = scipy.ndimage.filters.median_filter(pred_section, 7)
+        pred_section = pred > th_list[i]
+        pred_section = scipy.ndimage.filters.median_filter(pred_section, 7)
 
-        pred_section = pred.copy()
-        if binarization_type == 'class_threshold':
-            for p in pred:
-                pred_section = ProbabilityEncoder().binarization(
-                    p,
-                    binarization_type=binarization_type,
-                    threshold=threshold,
-                    time_axis=0,
-                )
-        else:
-            pred_section = ProbabilityEncoder().binarization(
-                pred,
-                binarization_type=binarization_type,
-                threshold=threshold,
-            )
+        # pred_section = pred.copy()
+        # pred_section = ProbabilityEncoder().binarization(
+        #     pred,
+        #     threshold=th_list[i],
+        # )
 
         change_indices = DecisionEncoder().find_contiguous_regions(pred_section)
         change_indices = change_indices / sr * frame_hop * net_pooling_rate
@@ -114,6 +112,7 @@ if __name__ == '__main__':
         44100,
         10*44100,
         256,
+        1,
         strong_meta[strong_meta['filename'] ==
                     'soundscape_train_uniform1090.wav'],
         class_map
@@ -121,6 +120,11 @@ if __name__ == '__main__':
     # print(np.where(label == 1.))
 
     result_label = strong_label_decoding(
-        label.T, 'soundscape_train_uniform1090.wav', 44100, 256, class_map)
+        label.T,
+        'soundscape_train_uniform1090.wav',
+        44100, 256, 1,
+        class_map,
+        [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+    )
     result_df = pd.DataFrame(result_label)
     print(result_df)

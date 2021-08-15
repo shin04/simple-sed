@@ -16,7 +16,7 @@ import torchvision.transforms as T
 from model.crnn import CRNN
 from dataset.urban_sed import StrongDataset
 from training.train import train, valid
-from training.test import test
+from training.test import test, decide_class_threshold
 from utils.transformers import GetMelSpectrogram
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
@@ -33,7 +33,7 @@ def run(cfg: DictConfig) -> None:
     device = torch.device(cfg['device'])
     print(f'start {ex_name} {str(ts)}')
 
-    result_path = cfg['result']['vaild_pred_dir'] / f'{ts}-valid.npy'
+    result_path = Path(cfg['result']['vaild_pred_dir']) / f'{ex_name}-valid.npy'
 
     audio_path = Path(cfg['dataset']['audio_path'])
     train_meta = Path(cfg['dataset']['train_meta'])
@@ -200,6 +200,7 @@ def run(cfg: DictConfig) -> None:
             global_step += len(train_dataset)
 
     """test step"""
+    print("start evaluate ...")
     test_dataset = StrongDataset(
         audio_path=audio_path / 'test',
         metadata_path=test_meta,
@@ -221,6 +222,11 @@ def run(cfg: DictConfig) -> None:
         attention=True
     ).to(device)
     model.load_state_dict(torch.load(model_path))
+
+    best_th = decide_class_threshold(
+        result_path, valid_meta, sr, hop_length, net_pooling_rate,
+        valid_dataset.class_map
+    )
     (
         test_psds_eval_list,
         test_psds_macro_f1_list,
@@ -229,7 +235,7 @@ def run(cfg: DictConfig) -> None:
     ) = test(
         model, test_dataloader, device, test_dataset.class_map, thresholds,
         psds_params, test_meta, test_duration,
-        sr, hop_length, net_pooling_rate
+        sr, hop_length, net_pooling_rate, best_th
     )
 
     print(
