@@ -251,7 +251,7 @@ def run(cfg: DictConfig) -> None:
         f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
     )
 
-    for i in range(cfg['validation']['psds']['val_num']):
+    for i in range(cfg['evaluate']['psds']['val_num']):
         score = test_psds_eval_list[i]
         f1 = test_psds_macro_f1_list[i]
         print(
