@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
-import scipy
-from dcase_util.data import DecisionEncoder
+# import scipy
+from dcase_util.data import DecisionEncoder, ProbabilityEncoder
 
 
 def strong_label_encoding(
@@ -42,28 +44,51 @@ def strong_label_encoding(
 
 
 def strong_label_decoding(
-    preds: np.array, filename: str,
-    sr: int, frame_hop: int, net_pooling_rate: int,
-    class_map: dict, threshold: float = 0.5,
+    preds: np.array,
+    filename: str,
+    sr: int,
+    frame_hop: int,
+    net_pooling_rate: int,
+    class_map: dict,
+    threshold: float | dict = 0.5,
+    binarization_type: str = 'global_threshold'
 ) -> list:
     """
     strong_label_decoding converts a prediction to a strong label.
     Ex:
         [0,0,1,1,1,...] -> [[event,onset, offset], ...]
 
-        Prameters
-        ---------
-        preds: (fraes, class)
+    Prameters
+    ---------
+    preds: (fraes, class)
+    binarization_type:
+        global_threshold or class_threshold
     """
 
     classes = list(class_map.keys())
     result_label = []
     for i, pred in enumerate(preds):
-        # event = [k for k, v in class_map.items() if v == i][0]
         event = classes[i]
 
-        pred_section = pred > threshold
-        pred_section = scipy.ndimage.filters.median_filter(pred_section, 7)
+        # pred_section = pred > threshold
+        # pred_section = scipy.ndimage.filters.median_filter(pred_section, 7)
+
+        pred_section = pred.copy()
+        if binarization_type == 'class_threshold':
+            for p in pred:
+                pred_section = ProbabilityEncoder().binarization(
+                    p,
+                    binarization_type=binarization_type,
+                    threshold=threshold,
+                    time_axis=0,
+                )
+        else:
+            pred_section = ProbabilityEncoder().binarization(
+                pred,
+                binarization_type=binarization_type,
+                threshold=threshold,
+            )
+
         change_indices = DecisionEncoder().find_contiguous_regions(pred_section)
         change_indices = change_indices / sr * frame_hop * net_pooling_rate
         for indice in change_indices:

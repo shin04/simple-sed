@@ -1,17 +1,37 @@
 from typing import Union
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import pandas as pd
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
     calc_sed_weak_f1,
     calc_sed_eval_metrics,
-    calc_psds_eval_metrics
+    calc_psds_eval_metrics,
+    search_best_threshold
 )
+
+
+def decide_class_threshold(
+    pred_dir,
+    meta_strong: Path,
+    sr: int,
+    hop_length: int,
+    pooling_rate: int,
+    class_map: dict
+):
+    pred_dict = np.load(pred_dir, allow_pickle=True)
+    preds = pred_dict.item().values()
+    filenames = pred_dict.item().keys()
+
+    best_th, best_f1 = search_best_threshold(
+        0.1, meta_strong, preds, filenames,
+        sr, hop_length, pooling_rate, class_map
+    )
 
 
 def test(

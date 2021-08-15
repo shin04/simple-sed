@@ -7,6 +7,8 @@ import torch
 from sed_eval.sound_event import SegmentBasedMetrics, EventBasedMetrics
 from psds_eval import PSDSEval
 
+from utils.label_encoder import strong_label_decoding
+
 
 def sed_average_precision(
     strong_label: torch.Tensor, pred: torch.Tensor, average: str = 'macro'
@@ -57,7 +59,8 @@ def calc_sed_eval_metrics(
     metadata_path: Path,
     prediction: pd.DataFrame,
     time_resolution: float,
-    t_collar: float
+    t_collar: float,
+    is_training: bool = True,
 ) -> dict:
     meta_df = pd.read_csv(metadata_path)
     grand_truth = meta_df
@@ -96,16 +99,19 @@ def calc_sed_eval_metrics(
     segment_res = segment_based_metrics.results()
     event_res = event_based_metrics.results()
 
-    return {
-        'segment': {
-            'class_wise_f1': segment_res['class_wise_average']['f_measure']['f_measure'],
-            'overall_f1': segment_res['overall']['f_measure']['f_measure'],
-        },
-        'event': {
-            'class_wise_f1': event_res['class_wise_average']['f_measure']['f_measure'],
-            'overall_f1': event_res['overall']['f_measure']['f_measure'],
-        },
-    }
+    if is_training:
+        return {
+            'segment': {
+                'class_wise_f1': segment_res['class_wise_average']['f_measure']['f_measure'],
+                'overall_f1': segment_res['overall']['f_measure']['f_measure'],
+            },
+            'event': {
+                'class_wise_f1': event_res['class_wise_average']['f_measure']['f_measure'],
+                'overall_f1': event_res['overall']['f_measure']['f_measure'],
+            },
+        }
+    else:
+        return segment_based_metrics, event_based_metrics
 
 
 def calc_psds_eval_metrics(
@@ -158,33 +164,45 @@ def calc_psds_eval_metrics(
     return psds_score.value, psds_macro_f1
 
 
-# def search_best_threshold(
-#     step: float,
-#     meta_path, est_df, target="Event"
-# ) -> float:
-#     assert 0 < step < 1.0
-#     assert target in ["Event", "Frame"]
+def search_best_threshold(
+    step: float,
+    meta_path: Path,
+    prediction: list,  # list of np.array
+    filenames: list,
+    sr: int,
+    hop_length: int,
+    pooling_rate: int,
+    class_map: dict,
+) -> float:
+    assert 0 < step < 1.0
 
-#     best_th = {k: 0.0 for k in labels}
-#     best_f1 = {k: 0.0 for k in labels}
+    labels = class_map.keys()
 
-#     for th in np.arange(step, 1.0, step):
-#         sed_metrics = calc_sed_eval_metrics(
-#             meta_path, est_df, 0.1, 0.2
-#         )
-#         events_metric = sed_metrics['event']
+    best_th = {k: 0.0 for k in labels}
+    best_f1 = {k: 0.0 for k in labels}
 
-#         for i, label in enumerate(labels):
-#             f1 = events_metric.class_wise_f_measure(event_label=label)["f_measure"]
-#             if f1 > best_f1[label]:
-#                 best_th[label] = th
-#                 best_f1[label] = f1
+    for th in np.arange(step, 1.0, step):
+        result = []
+        for i, pred in enumerate(prediction):
+            result += strong_label_decoding(
+                pred, filenames[i], sr, hop_length, pooling_rate, class_map
+            )
 
-#     thres_list = [0.5] * len(labels)
-#     for i, label in enumerate(labels):
-#         thres_list[i] = best_th[label]
+        _, events_metric = calc_sed_eval_metrics(
+            meta_path, pd.DataFrame(result), 0.1, 0.2, False
+        )
 
-#     return best_th
+        for i, label in enumerate(labels):
+            f1 = events_metric.class_wise_f_measure(event_label=label)["f_measure"]
+            if f1 > best_f1[label]:
+                best_th[label] = th
+                best_f1[label] = f1
+
+    thres_list = [0.5] * len(labels)
+    for i, label in enumerate(labels):
+        thres_list[i] = best_th[label]
+
+    return best_th, best_f1
 
 
 if __name__ == '__main__':
