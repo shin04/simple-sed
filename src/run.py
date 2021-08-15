@@ -31,8 +31,9 @@ def run(cfg: DictConfig) -> None:
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
-
     print(f'start {ex_name} {str(ts)}')
+
+    result_path = cfg['result']['vaild_pred_dir'] / f'{ts}-valid.npy'
 
     audio_path = Path(cfg['dataset']['audio_path'])
     train_meta = Path(cfg['dataset']['train_meta'])
@@ -186,7 +187,7 @@ def run(cfg: DictConfig) -> None:
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
-                np.save('./prediction.npy', pred_dict)
+                np.save(result_path, pred_dict)
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
