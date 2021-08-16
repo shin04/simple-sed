@@ -102,6 +102,7 @@ def test(
             sed_evals[thr] = calc_sed_eval_metrics(
                 meta_strong, pd.DataFrame(results[thr]), 0.1, 0.2
             )
+        print(sed_evals)
 
         psds_eval_list, psds_macro_f1_list = [], []
         for i in range(psds_params['val_num']):
