@@ -161,7 +161,7 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
-    with open('../config/baseline.yaml') as yml:
+    with open('../config/hubert.yaml') as yml:
         conf = yaml.load(yml)
 
     model_conf = conf['model']
@@ -169,4 +169,5 @@ if __name__ == '__main__':
         cnn_cfg=model_conf['cnn'],
         rnn_cfg=model_conf['rnn']
     ).cpu()
-    summary(model, input_size=(8, 128, 1000))
+    # summary(model, input_size=(8, 128, 1000))
+    summary(model, input_size=(8, 768, 499))

@@ -15,6 +15,7 @@ run:
 		--mount type=bind,source=$(HOME_DIR)$(AUDIO_PATH),target=/ml/dataset/audio \
 		--mount type=bind,source=$(HOME_DIR)$(MODEL_PATH),target=/ml/models \
 		--mount type=bind,source=$(HOME_DIR)$(RESULT_PATH),target=/ml/results \
+		--mount type=bind,source=$(HOME_DIR)$(FEAT_PATH),target=/ml/dataset/feat \
 		--name $(CONTAINER_NAME) \
 		--gpus all \
 		$(IMAGE_NAME) /bin/bash
