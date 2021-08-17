@@ -122,7 +122,7 @@ def valid(
                     results[thr] += result
 
         sed_eval_pred = pd.DataFrame(results[sed_eval_thr])
-        if sed_eval_pred.columns != []:
+        if len(sed_eval_pred.columns) != 0:
             sed_evals = calc_sed_eval_metrics(
                 meta_strong, sed_eval_pred, class_map, 0.1, 0.2
             )
