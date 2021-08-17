@@ -178,7 +178,7 @@ def run(cfg: DictConfig) -> None:
             print(
                 '[VALID SED EVAL]\n'
                 f'segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f}',
-                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}',
+                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}\n',
                 f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}',
                 f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}',
             )

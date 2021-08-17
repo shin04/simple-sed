@@ -63,6 +63,7 @@ def get_event_list_current_file(df: pd.DataFrame, fname: str) -> list:
 def calc_sed_eval_metrics(
     metadata_path: Path,
     prediction: pd.DataFrame,
+    class_map: dict,
     time_resolution: float,
     t_collar: float,
     is_training: bool = True,
@@ -71,10 +72,11 @@ def calc_sed_eval_metrics(
     grand_truth = meta_df
 
     evaluated_files = meta_df["filename"].unique()
-    classes = []
-    classes.extend(meta_df.event_label.dropna().unique())
-    classes.extend(prediction.event_label.dropna().unique())
-    classes = sorted(list(set(classes)))
+    classes = list(class_map.keys())
+    # classes = []
+    # classes.extend(meta_df.event_label.dropna().unique())
+    # classes.extend(prediction.event_label.dropna().unique())
+    # classes = sorted(list(set(classes)))
 
     segment_based_metrics = SegmentBasedMetrics(
         event_label_list=classes,
@@ -198,7 +200,8 @@ def search_best_threshold(
         )
 
         for i, label in enumerate(labels):
-            f1 = events_metric.class_wise_f_measure(event_label=label)["f_measure"]
+            f1 = events_metric.class_wise_f_measure(
+                event_label=label)["f_measure"]
 
             if f1 > best_f1[label]:
                 best_th[label] = th
