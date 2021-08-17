@@ -13,7 +13,9 @@ class HuBERTDataset(Dataset):
     def __init__(
         self, feat_path: Path, metadata_path: Path, weak_label_path: Path,
         class_map: dict = None,
-        net_pooling_rate: int = 1,
+        sr: int = 16000,
+        sec: int = 10,
+        net_pooling_rate: int = 320,
         transforms: T.Compose = None,
     ) -> None:
         self.feat_path = feat_path
@@ -29,6 +31,8 @@ class HuBERTDataset(Dataset):
         weak_label_df = pd.read_csv(weak_label_path, index_col=0)
         self.weak_labels = weak_label_df[self.class_map.keys()].values
 
+        self.sr = sr
+        self.sec = sec
         self.net_pooling_rate = net_pooling_rate
 
         self.transforms = transforms
@@ -38,8 +42,8 @@ class HuBERTDataset(Dataset):
 
     def __getitem__(self, idx):
         filename = self.filenames[idx]
-        # p = self.feat_path / f'{filename[:-4]}.npy'
-        p = self.feat_path / f'{filename}.npy'
+        p = self.feat_path / f'{filename[:-4]}.npy'
+        # p = self.feat_path / f'{filename}.npy'
 
         feat = np.load(p)
 
@@ -48,7 +52,7 @@ class HuBERTDataset(Dataset):
             feat = self.transforms(feat)
 
         label = strong_label_encoding(
-            16000, 16000*10, 1, 320,
+            self.sr, self.sr*self.sec, 1, self.net_pooling_rate,
             self.meta_df[self.meta_df['filename'] == filename], self.class_map
         )
         label = label[:499, ]
@@ -72,6 +76,8 @@ if __name__ == '__main__':
             '/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
         weak_label_path=Path(
             '/home/kajiwara21/work/sed/meta/train_meta_weak.csv'),
+        sr=16000,
+        sec=10,
         net_pooling_rate=320
     )
 
