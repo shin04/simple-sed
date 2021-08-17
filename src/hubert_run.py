@@ -174,13 +174,13 @@ def run(cfg: DictConfig) -> None:
                 f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}',
             )
 
-            if best_loss > train_tot_loss:
-                best_loss = train_tot_loss
+            if best_loss > valid_tot_loss:
+                best_loss = valid_tot_loss
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 print(f'update best model (loss: {best_loss})')
 
-            early_stopping(train_tot_loss)
+            early_stopping(valid_tot_loss)
             if early_stopping.early_stop:
                 print('Early Stopping')
                 break
