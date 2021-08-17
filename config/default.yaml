@@ -26,6 +26,7 @@ training:
   n_epoch: 100
   batch_size: 16
   lr: 0.001
+  weight_decay: 0
   num_workers: 8
   early_stop_patience: 100
   pred_thr: 0.5

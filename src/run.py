@@ -113,7 +113,10 @@ def run(cfg: DictConfig) -> None:
         attention=True
     ).to(device)
     early_stopping = EarlyStopping(patience=es_patience)
-    optimizer = optim.Adam(model.parameters(), lr=lr, amsgrad=False)
+    optimizer = optim.Adam(
+        model.parameters(), lr=lr,
+        weight_decay=cfg['training']['weight_decay'], amsgrad=False
+    )
     criterion = nn.BCELoss()
 
     """training and validation"""
