@@ -15,8 +15,8 @@ dataset:
   train_duration: "/ml/meta/train_meta_duration.csv"
   valid_duration: "/ml/meta/valid_meta_duration.csv"
   test_duration: "/ml/meta/test_meta_duration.csv"
-  feat_path: "/ml/dataset/feat/sample-train"
-  sr: 44100
+  feat_path: "/ml/dataset/feat/libri-base-layer-12"
+  sr: 16000
   sec: 10
   net_pooling_rate: 320
 
