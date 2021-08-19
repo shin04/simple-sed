@@ -123,8 +123,7 @@ def run(cfg: DictConfig) -> None:
     """training and validation"""
     best_loss = 10000
     global_step = 0
-    mlflow.set_tracking_uri(
-        "file://" + hydra.utils.get_original_cwd() + "/../log/mlruns")
+    mlflow.set_tracking_uri(cfg['tracking_url'])
     mlflow.set_experiment(ex_name)
     with mlflow.start_run(run_name=str(ts)):
         log_params_from_omegaconf_dict(dict(cfg))
