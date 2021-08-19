@@ -216,6 +216,7 @@ def run(cfg: DictConfig) -> None:
         test_dataset, batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=pin_memory
     )
+
     model = CRNN(
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),

@@ -15,6 +15,7 @@ import torch.optim as optim
 from model.crnn import CRNN
 from dataset.hubert_feat import HuBERTDataset
 from training.hubert_train import train, valid
+from training.hubert_test import test
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
@@ -35,13 +36,13 @@ def run(cfg: DictConfig) -> None:
     feat_path = Path(cfg['dataset']['feat_path'])
     train_meta = Path(cfg['dataset']['train_meta'])
     valid_meta = Path(cfg['dataset']['valid_meta'])
-    # test_meta = Path(cfg['dataset']['test_meta'])
+    test_meta = Path(cfg['dataset']['test_meta'])
     train_weak_label = Path(cfg['dataset']['train_weak_label'])
     valid_weak_label = Path(cfg['dataset']['valid_weak_label'])
-    # test_weak_label = Path(cfg['dataset']['test_weak_label'])
+    test_weak_label = Path(cfg['dataset']['test_weak_label'])
     # train_duration = Path(cfg['dataset']['train_duration'])
     # valid_duration = Path(cfg['dataset']['valid_duration'])
-    # test_duration = Path(cfg['dataset']['test_duration'])
+    test_duration = Path(cfg['dataset']['test_duration'])
     model_path = Path(cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
 
     sr = cfg['dataset']['sr']
@@ -60,6 +61,8 @@ def run(cfg: DictConfig) -> None:
     else:
         pin_memory = True
     es_patience = cfg['training']['early_stop_patience']
+
+    psds_params = cfg['evaluate']['psds']
 
     """prepare datasets"""
     train_dataset = HuBERTDataset(
@@ -80,12 +83,26 @@ def run(cfg: DictConfig) -> None:
         net_pooling_rate=net_pooling_rate,
         transforms=None
     )
+    test_dataset = HuBERTDataset(
+        feat_path=feat_path/'test',
+        metadata_path=test_meta,
+        weak_label_path=test_weak_label,
+        sr=sr,
+        sec=sec,
+        net_pooling_rate=net_pooling_rate,
+        transforms=None
+    )
+
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True,
         num_workers=num_workers, pin_memory=pin_memory
     )
     valid_dataloader = DataLoader(
         valid_dataset, batch_size=batch_size, shuffle=False,
+        num_workers=num_workers, pin_memory=pin_memory
+    )
+    test_dataloader = DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=pin_memory
     )
 
@@ -186,6 +203,48 @@ def run(cfg: DictConfig) -> None:
                 break
 
             global_step += len(train_dataset)
+
+    """test step"""
+    print("start evaluate ...")
+
+    model = CRNN(
+        **cfg['model']['dence'],
+        cnn_cfg=dict(cfg['model']['cnn']),
+        rnn_cfg=dict(cfg['model']['rnn']),
+        attention=True
+    ).to(device)
+    model.load_state_dict(torch.load(model_path))
+
+    (
+        test_psds_eval_list,
+        test_psds_macro_f1_list,
+        test_weak_f1,
+        test_sed_evals,
+        test_pred_dict
+    ) = test(
+        model, test_dataloader, device, test_dataset.class_map,
+        cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
+        psds_params, test_meta, test_duration,
+        sr, 1, net_pooling_rate, {}
+    )
+
+    print(
+        '===============\n'
+        '[test EVAL]\n'
+        f'weak_f1:{test_weak_f1: .4f}\n',
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
+        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
+        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
+    )
+
+    for i in range(cfg['evaluate']['psds']['val_num']):
+        score = test_psds_eval_list[i]
+        f1 = test_psds_macro_f1_list[i]
+        print(
+            f'psds score ({i}):{score: .4f}, '
+            f'macro f1 ({i}):{f1: .4f}'
+        )
 
     print(f'ex "{str(ts)}" complete !!')
 

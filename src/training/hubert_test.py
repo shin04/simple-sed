@@ -65,7 +65,7 @@ def test(
 
     with torch.no_grad():
         for ite, item in enumerate(dataloader):
-            data = item['waveform'].to(device)
+            data = item['feat'].to(device)
             weak_labels = item['weak_label'].to(device)
 
             strong_pred, weak_pred = model(data)
