@@ -1,5 +1,6 @@
 ex_name: "sample"
 device: "cuda"
+tracking_url: "file://ml/log/mlruns"
 
 result:
   vaild_pred_dir: "/ml/results"
