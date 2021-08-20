@@ -70,7 +70,8 @@ def test(
 
             strong_pred, weak_pred = model(data)
 
-            weak_f1_sum += calc_sed_weak_f1(weak_labels, weak_pred, sed_eval_thr)
+            weak_f1_sum += calc_sed_weak_f1(weak_labels,
+                                            weak_pred, sed_eval_thr)
 
             for i, pred in enumerate(strong_pred):
                 pred = pred.to('cpu').detach().numpy().copy()
@@ -100,7 +101,7 @@ def test(
         sed_evals = {}
         for thr in thresholds:
             sed_evals[thr] = calc_sed_eval_metrics(
-                meta_strong, pd.DataFrame(results[thr]), 0.1, 0.2
+                meta_strong, pd.DataFrame(results[thr]), class_map, 0.1, 0.2
             )
         print(sed_evals)
 
