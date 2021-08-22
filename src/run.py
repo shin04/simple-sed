@@ -201,73 +201,73 @@ def run(cfg: DictConfig) -> None:
 
             global_step += len(train_dataset)
 
-    """test step"""
-    log.info("start evaluate ...")
-    test_dataset = StrongDataset(
-        audio_path=audio_path / 'test',
-        metadata_path=test_meta,
-        weak_label_path=test_weak_label,
-        sr=sr,
-        frame_hop=hop_length,
-        sample_sec=sample_sec,
-        net_pooling_rate=net_pooling_rate,
-        transforms=transforms
-    )
-    test_dataloader = DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=pin_memory
-    )
+        """test step"""
+        log.info("start evaluate ...")
+        test_dataset = StrongDataset(
+            audio_path=audio_path / 'test',
+            metadata_path=test_meta,
+            weak_label_path=test_weak_label,
+            sr=sr,
+            frame_hop=hop_length,
+            sample_sec=sample_sec,
+            net_pooling_rate=net_pooling_rate,
+            transforms=transforms
+        )
+        test_dataloader = DataLoader(
+            test_dataset, batch_size=batch_size, shuffle=False,
+            num_workers=num_workers, pin_memory=pin_memory
+        )
 
-    model = CRNN(
-        **cfg['model']['dence'],
-        cnn_cfg=dict(cfg['model']['cnn']),
-        rnn_cfg=dict(cfg['model']['rnn']),
-        attention=True
-    ).to(device)
-    model.load_state_dict(torch.load(model_path))
+        model = CRNN(
+            **cfg['model']['dence'],
+            cnn_cfg=dict(cfg['model']['cnn']),
+            rnn_cfg=dict(cfg['model']['rnn']),
+            attention=True
+        ).to(device)
+        model.load_state_dict(torch.load(model_path))
 
-    # best_th = decide_class_threshold(
-    #     result_path / f'{ex_name}-valid.npy', valid_meta, sr, hop_length, net_pooling_rate,
-    #     valid_dataset.class_map
-    # )
-    # log.info('best valid thresholds', best_th)
-    (
-        test_psds_eval_list,
-        test_psds_macro_f1_list,
-        test_weak_f1,
-        test_sed_evals,
-        test_pred_dict
-    ) = test(
-        model, test_dataloader, device, test_dataset.class_map,
-        cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
-        psds_params, test_meta, test_duration,
-        sr, hop_length, net_pooling_rate,
-        # best_th
-        {}
-    )
+        # best_th = decide_class_threshold(
+        #     result_path / f'{ex_name}-valid.npy', valid_meta, sr, hop_length, net_pooling_rate,
+        #     valid_dataset.class_map
+        # )
+        # log.info('best valid thresholds', best_th)
+        (
+            test_psds_eval_list,
+            test_psds_macro_f1_list,
+            test_weak_f1,
+            test_sed_evals,
+            test_pred_dict
+        ) = test(
+            model, test_dataloader, device, test_dataset.class_map,
+            cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
+            psds_params, test_meta, test_duration,
+            sr, hop_length, net_pooling_rate,
+            # best_th
+            {}
+        )
 
-    log.info('[TEST EVAL]')
-    log.info(f'weak_f1:{test_weak_f1: .4f}')
-    log.info(
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f} ' +
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}'
-    )
-    log.info(
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f} ' +
-        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
-    )
+        log.info('[TEST EVAL]')
+        log.info(f'weak_f1:{test_weak_f1: .4f}')
+        log.info(
+            f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f} ' +
+            f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}'
+        )
+        log.info(
+            f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f} ' +
+            f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
+        )
 
-    for i in range(cfg['evaluate']['psds']['val_num']):
-        score = test_psds_eval_list[i]
-        f1 = test_psds_macro_f1_list[i]
-        log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
+        for i in range(cfg['evaluate']['psds']['val_num']):
+            score = test_psds_eval_list[i]
+            f1 = test_psds_macro_f1_list[i]
+            log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
-    np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
+        np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 
-    mlflow.log_artifact('.hydra/config.yaml')
-    mlflow.log_artifact('.hydra/hydra.yaml')
-    mlflow.log_artifact('.hydra/overrides.yaml')
-    mlflow.log_artifact(f'{__file__[:-3]}.log')
+        mlflow.log_artifact('.hydra/config.yaml')
+        mlflow.log_artifact('.hydra/hydra.yaml')
+        mlflow.log_artifact('.hydra/overrides.yaml')
+        mlflow.log_artifact(f'{__file__[:-3]}.log')
 
     log.info(f'ex "{str(ts)}" complete !!')
 

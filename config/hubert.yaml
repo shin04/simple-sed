@@ -33,18 +33,18 @@ training:
 model:
   save_path: "/ml/models"
   cnn:
-    num_layers: 6 # FORGET FIX THIS PARAMETER!!!!
+    num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
     in_channels: 1
-    conv_filters: [64, 64, 128, 128, 256, 256]
-    kernel_sizes: [3, 3, 3, 3, 3, 3]
-    strides: [1, 1, 1, 1, 1, 1]
-    paddings: [1, 1, 1, 1, 1, 1]
-    poolings: [[1, 4], [1, 4], [1, 4], [1, 2], [1, 2], [1, 2]]
+    conv_filters: [128, 128, 128, 128]
+    kernel_sizes: [3, 3, 3, 3]
+    strides: [1, 1, 1, 1]
+    paddings: [1, 1, 1, 1]
+    poolings: [[1, 8], [1, 4], [1, 4], [1, 4]]
     dropout_rate: 0.5
   rnn:
-    input_size: 256
-    hidden_size: 64
-    num_layers: 1
+    input_size: 128
+    hidden_size: 128
+    num_layers: 3
     dropout_rate: 0
   dence:
     dropout_rate: 0.5

@@ -205,45 +205,50 @@ def run(cfg: DictConfig) -> None:
 
             global_step += len(train_dataset)
 
-    """test step"""
-    log.info("start evaluate ...")
+        """test step"""
+        log.info("start evaluate ...")
 
-    model = CRNN(
-        **cfg['model']['dence'],
-        cnn_cfg=dict(cfg['model']['cnn']),
-        rnn_cfg=dict(cfg['model']['rnn']),
-        attention=True
-    ).to(device)
-    model.load_state_dict(torch.load(model_path))
+        model = CRNN(
+            **cfg['model']['dence'],
+            cnn_cfg=dict(cfg['model']['cnn']),
+            rnn_cfg=dict(cfg['model']['rnn']),
+            attention=True
+        ).to(device)
+        model.load_state_dict(torch.load(model_path))
 
-    (
-        test_psds_eval_list,
-        test_psds_macro_f1_list,
-        test_weak_f1,
-        test_sed_evals,
-        test_pred_dict
-    ) = test(
-        model, test_dataloader, device, test_dataset.class_map,
-        cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
-        psds_params, test_meta, test_duration,
-        sr, 1, net_pooling_rate, {}
-    )
+        (
+            test_psds_eval_list,
+            test_psds_macro_f1_list,
+            test_weak_f1,
+            test_sed_evals,
+            test_pred_dict
+        ) = test(
+            model, test_dataloader, device, test_dataset.class_map,
+            cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
+            psds_params, test_meta, test_duration,
+            sr, 1, net_pooling_rate, {}
+        )
 
-    log.info('[TEST EVAL]')
-    log.info(f'weak_f1:{test_weak_f1: .4f}')
-    log.info(
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f} ' +
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}'
-    )
-    log.info(
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f} ' +
-        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
-    )
+        log.info('[TEST EVAL]')
+        log.info(f'weak_f1:{test_weak_f1: .4f}')
+        log.info(
+            f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f} ' +
+            f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}'
+        )
+        log.info(
+            f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f} ' +
+            f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
+        )
 
-    for i in range(cfg['evaluate']['psds']['val_num']):
-        score = test_psds_eval_list[i]
-        f1 = test_psds_macro_f1_list[i]
-        log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
+        for i in range(cfg['evaluate']['psds']['val_num']):
+            score = test_psds_eval_list[i]
+            f1 = test_psds_macro_f1_list[i]
+            log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
+
+        mlflow.log_artifact('.hydra/config.yaml')
+        mlflow.log_artifact('.hydra/hydra.yaml')
+        mlflow.log_artifact('.hydra/overrides.yaml')
+        mlflow.log_artifact(f'{__file__[:-3]}.log')
 
     log.info(f'ex "{str(ts)}" complete !!')
 

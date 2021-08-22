@@ -8,6 +8,7 @@ __pycache__
 /notebooks/
 /*env/
 /src/outputs/
+/src/multirun/
 /src/sample*.py
 
 .env.secret
