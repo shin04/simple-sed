@@ -7,6 +7,7 @@ from datetime import datetime
 import hydra
 import mlflow
 from omegaconf import DictConfig
+from dotenv import load_dotenv
 # import numpy as np
 import torch
 import torch.nn as nn
@@ -26,6 +27,9 @@ log = logging.getLogger(__name__)
 
 @hydra.main(config_path='../config', config_name='hubert.yaml')
 def run(cfg: DictConfig) -> None:
+    load_dotenv(verbose=True)
+    load_dotenv(cfg['environments'])
+    tracking_url = os.environ.get('TRACKING_URL')
     ts = datetime.now().strftime(TIME_TEMPLATE)
 
     """prepare parameters"""
@@ -125,7 +129,7 @@ def run(cfg: DictConfig) -> None:
     """training and validation"""
     best_loss = 10000
     global_step = 0
-    mlflow.set_tracking_uri(cfg['tracking_url'])
+    mlflow.set_tracking_uri(tracking_url)
     mlflow.set_experiment(ex_name)
     with mlflow.start_run(run_name=str(ts)):
         log_params_from_omegaconf_dict(dict(cfg))
