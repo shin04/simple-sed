@@ -10,5 +10,7 @@ __pycache__
 /src/outputs/
 /src/sample*.py
 
+.env.secret
+
 *csv
 *png
