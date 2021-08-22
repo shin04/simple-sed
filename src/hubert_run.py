@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 from pathlib import Path
 from datetime import datetime
 
@@ -20,6 +21,7 @@ from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
 TIME_TEMPLATE = '%Y%m%d%H%M%S'
+log = logging.getLogger(__name__)
 
 
 @hydra.main(config_path='../config', config_name='hubert.yaml')
@@ -29,7 +31,7 @@ def run(cfg: DictConfig) -> None:
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
-    print(f'start {ex_name} {str(ts)}')
+    log.info(f'start {ex_name} {str(ts)}')
 
     # result_path = Path(cfg['result']['vaild_pred_dir'])
 
@@ -166,27 +168,24 @@ def run(cfg: DictConfig) -> None:
             mlflow.log_metric('valid/sed_eval/event/overall_f1',
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
-            print(
-                '====================\n'
-                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) '
-            )
-            print(
-                '[TRAIN]\n',
-                f'train loss(strong):{train_strong_loss: .4f}, '
-                f'train loss(weak):{train_weak_loss: .4f}, '
+            log.info(f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
+            log.info('[TRAIN]')
+            log.info(
+                f'train loss(strong):{train_strong_loss: .4f}, ' +
+                f'train loss(weak):{train_weak_loss: .4f}, ' +
                 f'train loss(total):{train_tot_loss: .4f}'
             )
-            print(
-                '[VALID]\n'
-                f'valid loss(strong):{valid_strong_loss: .4f}, '
-                f'valid loss(weak):{valid_weak_loss: .4f}, '
+            log.info('[VALID]')
+            log.info(
+                f'valid loss(strong):{valid_strong_loss: .4f}, ' +
+                f'valid loss(weak):{valid_weak_loss: .4f}, ' +
                 f'valid loss(total):{valid_tot_loss: .4f}'
             )
-            print(
-                '[VALID SED EVAL]\n'
-                f'segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f}',
-                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}',
-                f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}',
+            log.info('[VALID SED EVAL]')
+            log.info(
+                f'segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f}', +
+                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}', +
+                f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}', +
                 f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}',
             )
 
@@ -194,17 +193,17 @@ def run(cfg: DictConfig) -> None:
                 best_loss = valid_tot_loss
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
-                print(f'update best model (loss: {best_loss})')
+                log.info(f'update best model (loss: {best_loss})')
 
             early_stopping(valid_tot_loss)
             if early_stopping.early_stop:
-                print('Early Stopping')
+                log.info('Early Stopping')
                 break
 
             global_step += len(train_dataset)
 
     """test step"""
-    print("start evaluate ...")
+    log.info("start evaluate ...")
 
     model = CRNN(
         **cfg['model']['dence'],
@@ -227,25 +226,24 @@ def run(cfg: DictConfig) -> None:
         sr, 1, net_pooling_rate, {}
     )
 
-    print(
-        '===============\n'
-        '[test EVAL]\n'
-        f'weak_f1:{test_weak_f1: .4f}\n',
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
+    log.info('[test EVAL]')
+    log.info(
+        f'weak_f1:{test_weak_f1: .4f}\n', +
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n', +
+        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n', +
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n', +
         f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
     )
 
     for i in range(cfg['evaluate']['psds']['val_num']):
         score = test_psds_eval_list[i]
         f1 = test_psds_macro_f1_list[i]
-        print(
-            f'psds score ({i}):{score: .4f}, '
+        log.info(
+            f'psds score ({i}):{score: .4f}, ' +
             f'macro f1 ({i}):{f1: .4f}'
         )
 
-    print(f'ex "{str(ts)}" complete !!')
+    log.info(f'ex "{str(ts)}" complete !!')
 
 
 if __name__ == '__main__':
