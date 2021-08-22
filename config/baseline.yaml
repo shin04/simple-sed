@@ -1,6 +1,6 @@
 ex_name: "sample"
 device: "cuda"
-tracking_url: "file://ml/log/mlruns"
+tracking_url: "file:///ml/log/mlruns"
 
 result:
   vaild_pred_dir: "/ml/results"
@@ -16,15 +16,15 @@ dataset:
   train_duration: "/ml/meta/train_meta_duration.csv"
   valid_duration: "/ml/meta/valid_meta_duration.csv"
   test_duration: "/ml/meta/test_meta_duration.csv"
-  sr: 44100
+  sr: 16000
   sec: 10
   net_pooling_rate: 1
 
 feature:
-  n_filters: 2048
-  n_window: 2048
-  hop_length: 1024
-  n_mels: 128
+  n_filters: 1024
+  n_window: 1024
+  hop_length: 512
+  n_mels: 64
 
 training:
   n_epoch: 100
@@ -32,25 +32,25 @@ training:
   lr: 0.001
   weight_decay: 0
   num_workers: 8
-  early_stop_patience: 10
+  early_stop_patience: 20
   thresholds: [0.5]
   sed_eval_thr: 0.5
 
 model:
   save_path: "/ml/models"
   cnn:
-    num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
+    num_layers: 3 # FORGET FIX THIS PARAMETER!!!!
     in_channels: 1
-    conv_filters: [128, 128, 128, 128]
-    kernel_sizes: [3, 3, 3, 3]
-    strides: [1, 1, 1, 1]
-    paddings: [1, 1, 1, 1]
-    poolings: [[1, 4], [1, 4], [1, 4], [1, 2]]
+    conv_filters: [64, 64, 64]
+    kernel_sizes: [3, 3, 3]
+    strides: [1, 1, 1]
+    paddings: [1, 1, 1]
+    poolings: [[1, 4], [1, 4], [1, 4]]
     dropout_rate: 0.5
   rnn:
-    input_size: 128
-    hidden_size: 128
-    num_layers: 3
+    input_size: 64
+    hidden_size: 64
+    num_layers: 1
     dropout_rate: 0
   dence:
     dropout_rate: 0.5
