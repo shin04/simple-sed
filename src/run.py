@@ -1,11 +1,13 @@
 import os
 import time
+import logging
 from pathlib import Path
 from datetime import datetime
 
 import hydra
 import mlflow
 from omegaconf import DictConfig
+from dotenv import load_dotenv
 import numpy as np
 import torch
 import torch.nn as nn
@@ -22,16 +24,20 @@ from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
 TIME_TEMPLATE = '%Y%m%d%H%M%S'
+log = logging.getLogger(__name__)
 
 
 @hydra.main(config_path='../config', config_name='baseline.yaml')
 def run(cfg: DictConfig) -> None:
+    load_dotenv(verbose=True)
+    load_dotenv(cfg['environments'])
+    tracking_url = os.environ.get('TRACKING_URL')
     ts = datetime.now().strftime(TIME_TEMPLATE)
 
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
-    print(f'start {ex_name} {str(ts)}')
+    log.info(f'start {ex_name} {str(ts)}')
 
     result_path = Path(cfg['result']['vaild_pred_dir'])
 
@@ -122,7 +128,7 @@ def run(cfg: DictConfig) -> None:
     """training and validation"""
     best_loss = 10000
     global_step = 0
-    mlflow.set_tracking_uri(cfg['tracking_url'])
+    mlflow.set_tracking_uri(tracking_url)
     mlflow.set_experiment(ex_name)
     with mlflow.start_run(run_name=str(ts)):
         log_params_from_omegaconf_dict(dict(cfg))
@@ -161,28 +167,25 @@ def run(cfg: DictConfig) -> None:
             mlflow.log_metric('valid/sed_eval/event/overall_f1',
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
-            print(
-                '====================\n'
-                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) '
-            )
-            print(
-                '[TRAIN]\n',
-                f'train loss(strong):{train_strong_loss: .4f}, '
-                f'train loss(weak):{train_weak_loss: .4f}, '
+            log.info(f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
+            log.info('[TRAIN]')
+            log.info(
+                f'train loss(strong):{train_strong_loss: .4f}, ' +
+                f'train loss(weak):{train_weak_loss: .4f}, ' +
                 f'train loss(total):{train_tot_loss: .4f}'
             )
-            print(
-                '[VALID]\n'
-                f'valid loss(strong):{valid_strong_loss: .4f}, '
-                f'valid loss(weak):{valid_weak_loss: .4f}, '
+            log.info('[VALID]')
+            log.info(
+                f'valid loss(strong):{valid_strong_loss: .4f}, ' +
+                f'valid loss(weak):{valid_weak_loss: .4f}, ' +
                 f'valid loss(total):{valid_tot_loss: .4f}'
             )
-            print(
-                '[VALID SED EVAL]\n'
-                f'segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f}',
-                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}\n',
-                f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}',
-                f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}',
+            log.info('[VALID SED EVAL]\n')
+            log.info(
+                f'segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f}' +
+                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}\n' +
+                f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}' +
+                f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}'
             )
 
             if best_loss > valid_tot_loss:
@@ -190,17 +193,17 @@ def run(cfg: DictConfig) -> None:
                 np.save(result_path / f'{ex_name}-{ts}-valid.npy', pred_dict)
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
-                print(f'update best model (loss: {best_loss})')
+                log.info(f'update best model (loss: {best_loss})')
 
             early_stopping(valid_tot_loss)
             if early_stopping.early_stop:
-                print('Early Stopping')
+                log.info('Early Stopping')
                 break
 
             global_step += len(train_dataset)
 
     """test step"""
-    print("start evaluate ...")
+    log.info("start evaluate ...")
     test_dataset = StrongDataset(
         audio_path=audio_path / 'test',
         metadata_path=test_meta,
@@ -228,7 +231,7 @@ def run(cfg: DictConfig) -> None:
     #     result_path / f'{ex_name}-valid.npy', valid_meta, sr, hop_length, net_pooling_rate,
     #     valid_dataset.class_map
     # )
-    # print('best valid thresholds', best_th)
+    # log.info('best valid thresholds', best_th)
     (
         test_psds_eval_list,
         test_psds_macro_f1_list,
@@ -244,27 +247,31 @@ def run(cfg: DictConfig) -> None:
         {}
     )
 
-    print(
-        '===============\n'
-        '[test EVAL]\n'
-        f'weak_f1:{test_weak_f1: .4f}\n',
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
-        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
+    log.info('[test EVAL]')
+    log.info(
+        f'weak_f1:{test_weak_f1: .4f}\n', +
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n' +
+        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n' +
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n' +
+        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n'
     )
 
     for i in range(cfg['evaluate']['psds']['val_num']):
         score = test_psds_eval_list[i]
         f1 = test_psds_macro_f1_list[i]
-        print(
-            f'psds score ({i}):{score: .4f}, '
+        log.info(
+            f'psds score ({i}):{score: .4f}, ' +
             f'macro f1 ({i}):{f1: .4f}'
         )
 
     np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 
-    print(f'ex "{str(ts)}" complete !!')
+    mlflow.log_artifact('.hydra/config.yaml')
+    mlflow.log_artifact('.hydra/hydra.yaml')
+    mlflow.log_artifact('.hydra/overrides.yaml')
+    mlflow.log_artifact(f'{__file__[:-3]}.log')
+
+    log.info(f'ex "{str(ts)}" complete !!')
 
 
 if __name__ == '__main__':
