@@ -70,8 +70,7 @@ class HuBERTDataset(Dataset):
 if __name__ == '__main__':
     dataset = HuBERTDataset(
         feat_path=Path(
-            '/home/kajiwara21/dataset/hubert_feat/urbansed/sample-train'),
-        # '/home/kajiwara21/mrnas02/home/datasets/hubert_feat/sample-train'),
+            '/home/kajiwara21/dataset/hubert_feat/urbansed/libri-base-layer-12/train'),
         metadata_path=Path(
             '/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
         weak_label_path=Path(
