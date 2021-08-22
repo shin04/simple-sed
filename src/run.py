@@ -246,14 +246,14 @@ def run(cfg: DictConfig) -> None:
         {}
     )
 
-    log.info('[TEST EVAL')
-    log.info('weak_f1:{test_weak_f1: .4f}')
+    log.info('[TEST EVAL]')
+    log.info(f'weak_f1:{test_weak_f1: .4f}')
     log.info(
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}' +
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f} ' +
         f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}'
     )
     log.info(
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}' +
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f} ' +
         f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
     )
 
