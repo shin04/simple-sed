@@ -27,7 +27,7 @@ feature:
   n_mels: 128
 
 training:
-  n_epoch: 1
+  n_epoch: 100
   batch_size: 32
   lr: 0.001
   weight_decay: 0
