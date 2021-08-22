@@ -16,18 +16,18 @@ dataset:
   train_duration: "/ml/meta/train_meta_duration.csv"
   valid_duration: "/ml/meta/valid_meta_duration.csv"
   test_duration: "/ml/meta/test_meta_duration.csv"
-  sr: 16000
+  sr: 44100
   sec: 10
   net_pooling_rate: 1
 
 feature:
-  n_filters: 1024
-  n_window: 1024
-  hop_length: 512
-  n_mels: 64
+  n_filters: 2048
+  n_window: 2048
+  hop_length: 1024
+  n_mels: 128
 
 training:
-  n_epoch: 100
+  n_epoch: 1
   batch_size: 32
   lr: 0.001
   weight_decay: 0
@@ -39,18 +39,18 @@ training:
 model:
   save_path: "/ml/models"
   cnn:
-    num_layers: 3 # FORGET FIX THIS PARAMETER!!!!
+    num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
     in_channels: 1
-    conv_filters: [64, 64, 64]
-    kernel_sizes: [3, 3, 3]
-    strides: [1, 1, 1]
-    paddings: [1, 1, 1]
-    poolings: [[1, 4], [1, 4], [1, 4]]
+    conv_filters: [128, 128, 128, 128]
+    kernel_sizes: [3, 3, 3, 3]
+    strides: [1, 1, 1, 1]
+    paddings: [1, 1, 1, 1]
+    poolings: [[1, 4], [1, 4], [1, 4], [1, 2]]
     dropout_rate: 0.5
   rnn:
-    input_size: 64
-    hidden_size: 64
-    num_layers: 1
+    input_size: 128
+    hidden_size: 128
+    num_layers: 3
     dropout_rate: 0
   dence:
     dropout_rate: 0.5

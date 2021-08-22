@@ -264,6 +264,11 @@ def run(cfg: DictConfig) -> None:
 
     np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 
+    mlflow.log_artifact('.hydra/config.yaml')
+    mlflow.log_artifact('.hydra/hydra.yaml')
+    mlflow.log_artifact('.hydra/overrides.yaml')
+    mlflow.log_artifact(f'{__file__[:-3]}.log')
+
     print(f'ex "{str(ts)}" complete !!')
 
 
