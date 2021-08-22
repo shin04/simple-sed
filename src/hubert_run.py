@@ -173,24 +173,23 @@ def run(cfg: DictConfig) -> None:
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
             log.info(f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
-            log.info('[TRAIN]')
             log.info(
-                f'train loss(strong):{train_strong_loss: .4f}, ' +
+                f'[TRAIN] train loss(strong):{train_strong_loss: .4f}, ' +
                 f'train loss(weak):{train_weak_loss: .4f}, ' +
                 f'train loss(total):{train_tot_loss: .4f}'
             )
-            log.info('[VALID]')
             log.info(
-                f'valid loss(strong):{valid_strong_loss: .4f}, ' +
+                f'[VALID] valid loss(strong):{valid_strong_loss: .4f}, ' +
                 f'valid loss(weak):{valid_weak_loss: .4f}, ' +
                 f'valid loss(total):{valid_tot_loss: .4f}'
             )
-            log.info('[VALID SED EVAL]')
             log.info(
-                f'segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f}', +
-                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}', +
-                f'event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f}', +
-                f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}',
+                f'[VALID F1(segment)] segment/class_wise_f1:{valid_sed_evals["segment"]["class_wise_f1"]: .4f} ' +
+                f'segment/overall_f1:{valid_sed_evals["segment"]["overall_f1"]: .4f}'
+            )
+            log.info(
+                f'[VALID F1(event)] event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f} ' +
+                f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}'
             )
 
             if best_loss > valid_tot_loss:
@@ -230,22 +229,21 @@ def run(cfg: DictConfig) -> None:
         sr, 1, net_pooling_rate, {}
     )
 
-    log.info('[test EVAL]')
+    log.info('[TEST EVAL]')
+    log.info(f'weak_f1:{test_weak_f1: .4f}')
     log.info(
-        f'weak_f1:{test_weak_f1: .4f}\n', +
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n', +
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n', +
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n', +
-        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}' +
+        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}'
+    )
+    log.info(
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}' +
+        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
     )
 
     for i in range(cfg['evaluate']['psds']['val_num']):
         score = test_psds_eval_list[i]
         f1 = test_psds_macro_f1_list[i]
-        log.info(
-            f'psds score ({i}):{score: .4f}, ' +
-            f'macro f1 ({i}):{f1: .4f}'
-        )
+        log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
     log.info(f'ex "{str(ts)}" complete !!')
 

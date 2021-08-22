@@ -1,4 +1,4 @@
-ex_name: "sample"
+ex_name: "sample-hubert"
 device: "cuda"
 environments: "/ml/.env.secret"
 
@@ -16,21 +16,15 @@ dataset:
   train_duration: "/ml/meta/train_meta_duration.csv"
   valid_duration: "/ml/meta/valid_meta_duration.csv"
   test_duration: "/ml/meta/test_meta_duration.csv"
-  sr: 44100
+  feat_path: "/ml/dataset/feat/libri-base-layer-12"
+  sr: 16000
   sec: 10
-  net_pooling_rate: 1
-
-feature:
-  n_filters: 2048
-  n_window: 2048
-  hop_length: 1024
-  n_mels: 128
+  net_pooling_rate: 320
 
 training:
   n_epoch: 100
-  batch_size: 32
+  batch_size: 8
   lr: 0.001
-  weight_decay: 0
   num_workers: 8
   early_stop_patience: 10
   thresholds: [0.5]
@@ -45,7 +39,7 @@ model:
     kernel_sizes: [3, 3, 3, 3]
     strides: [1, 1, 1, 1]
     paddings: [1, 1, 1, 1]
-    poolings: [[1, 4], [1, 4], [1, 4], [1, 2]]
+    poolings: [[1, 8], [1, 4], [1, 4], [1, 4]]
     dropout_rate: 0.5
   rnn:
     input_size: 128
