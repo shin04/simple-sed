@@ -30,6 +30,8 @@ class GetMelSpectrogram:
         n_window: int,
         hop_length: int,
         n_mels: int,
+        f_min: int,
+        f_max: int,
         log_scale: bool
     ) -> None:
         self.mel_spec_trans = MelSpectrogram(
@@ -37,6 +39,8 @@ class GetMelSpectrogram:
             n_fft=n_filters,
             win_length=n_window,
             hop_length=hop_length,
+            f_min=f_min,
+            f_max=f_max,
             n_mels=n_mels
         )
 
