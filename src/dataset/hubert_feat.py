@@ -1,24 +1,30 @@
+from __future__ import annotations
 from pathlib import Path
+import time
 
 import numpy as np
 import pandas as pd
 import torch
 import torchvision.transforms as T
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 from utils.label_encoder import strong_label_encoding
 
 
 class HuBERTDataset(Dataset):
     def __init__(
-        self, feat_path: Path, metadata_path: Path, weak_label_path: Path,
+        self,
+        feat_pathes: list[Path],
+        metadata_path: Path,
+        weak_label_path: Path,
         class_map: dict = None,
         sr: int = 16000,
         sec: int = 10,
         net_pooling_rate: int = 320,
         transforms: T.Compose = None,
     ) -> None:
-        self.feat_path = feat_path
+        self.feat_pathes = feat_pathes
+        self.n_layers = len(feat_pathes)
 
         self.meta_df = pd.read_csv(metadata_path)
         self.filenames = self.meta_df['filename'].unique().tolist()
@@ -37,29 +43,39 @@ class HuBERTDataset(Dataset):
 
         self.transforms = transforms
 
+        _filename = self.filenames[0]
+        _feat = np.load(feat_pathes[0] / f'{_filename[:-4]}.npy')
+        self.shape = _feat.shape
+
     def __len__(self):
         return len(self.filenames)
 
     def __getitem__(self, idx):
         filename = self.filenames[idx]
-        p = self.feat_path / f'{filename[:-4]}.npy'
-        # p = self.feat_path / f'{filename}.npy'
 
-        feat = np.load(p)
+        # feat (n_layers, n_frames, 768)
+        feats = np.zeros((self.n_layers, self.shape[0], self.shape[1]))
+        for i, feat_path in enumerate(self.feat_pathes):
+            p = feat_path / f'{filename[:-4]}.npy'
+            feats[i] = np.load(p)
 
-        feat = torch.from_numpy(feat).float()
+        feats = torch.from_numpy(feats).float()
+        # (n_layers, n_frames, 768) -> (n_frames, 768, n_layers)
+        feats = feats.permute(1, 2, 0)
+
         if self.transforms is not None:
-            feat = self.transforms(feat)
+            feats = self.transforms(feats)
 
         label = strong_label_encoding(
             self.sr, self.sr*self.sec, 1, self.net_pooling_rate,
             self.meta_df[self.meta_df['filename'] == filename], self.class_map
         )
+        # FIXME: fix label encoding for hubert feature
         label = label[:499, ]
 
         item = {
             'filename': filename,
-            'feat': feat.T,
+            'feat': feats,
             'target': torch.from_numpy(label.T).float(),
             'weak_label': torch.from_numpy(self.weak_labels[idx]).float()
         }
@@ -69,8 +85,32 @@ class HuBERTDataset(Dataset):
 
 if __name__ == '__main__':
     dataset = HuBERTDataset(
-        feat_path=Path(
-            '/home/kajiwara21/dataset/hubert_feat/urbansed/libri-base-layer-12/train'),
+        feat_pathes=[
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-12/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-11/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-10/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-9/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-8/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-7/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-6/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-5/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-4/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-3/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-2/train'),
+            Path(
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-1/train'),
+        ],
         metadata_path=Path(
             '/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
         weak_label_path=Path(
@@ -81,7 +121,20 @@ if __name__ == '__main__':
     )
 
     print(len(dataset))
-    print(dataset[0]['filename'])
-    print(dataset[0]['feat'].shape)
-    print(dataset[0]['target'].shape)
-    print(dataset[0]['weak_label'])
+    data = dataset[0]
+    print(data['filename'])
+    print(data['feat'].shape)
+    print(data['target'].shape)
+    print(data['weak_label'])
+
+    dataloader = DataLoader(
+        dataset, batch_size=16, shuffle=True, num_workers=8, pin_memory=True
+    )
+    s = time.perf_counter()
+    sum = 0
+    for _ in dataloader:
+        t = time.perf_counter()
+        sum += t - s
+        print(t-s)
+        s = time.perf_counter()
+    print(time.perf_counter() - s)
