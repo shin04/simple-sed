@@ -1,12 +1,11 @@
 from __future__ import annotations
 from pathlib import Path
-import time
 
 import numpy as np
 import pandas as pd
 import torch
 import torchvision.transforms as T
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 
 from utils.label_encoder import strong_label_encoding
 
@@ -126,15 +125,3 @@ if __name__ == '__main__':
     print(data['feat'].shape)
     print(data['target'].shape)
     print(data['weak_label'])
-
-    dataloader = DataLoader(
-        dataset, batch_size=16, shuffle=True, num_workers=8, pin_memory=True
-    )
-    s = time.perf_counter()
-    sum = 0
-    for _ in dataloader:
-        t = time.perf_counter()
-        sum += t - s
-        print(t-s)
-        s = time.perf_counter()
-    print(time.perf_counter() - s)
