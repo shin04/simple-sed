@@ -1,22 +1,22 @@
 ex_name: "sample"
 device: "cuda"
 base_dir: "/ml"
-environments: "/.env.secret"
+environments: ".env.secret"
 
 result:
-  vaild_pred_dir: "/results"
+  vaild_pred_dir: "results"
 
 dataset:
-  audio_path: "/dataset/audio"
-  train_meta: "/meta/train_meta_strong.csv"
-  valid_meta: "/meta/valid_meta_strong.csv"
-  test_meta: "/meta/test_meta_strong.csv"
-  train_weak_label: "/meta/train_meta_weak.csv"
-  valid_weak_label: "/meta/valid_meta_weak.csv"
-  test_weak_label: "/meta/test_meta_weak.csv"
-  train_duration: "/meta/train_meta_duration.csv"
-  valid_duration: "/meta/valid_meta_duration.csv"
-  test_duration: "/meta/test_meta_duration.csv"
+  audio_path: "dataset/audio"
+  train_meta: "meta/train_meta_strong.csv"
+  valid_meta: "meta/valid_meta_strong.csv"
+  test_meta: "meta/test_meta_strong.csv"
+  train_weak_label: "meta/train_meta_weak.csv"
+  valid_weak_label: "meta/valid_meta_weak.csv"
+  test_weak_label: "meta/test_meta_weak.csv"
+  train_duration: "meta/train_meta_duration.csv"
+  valid_duration: "meta/valid_meta_duration.csv"
+  test_duration: "meta/test_meta_duration.csv"
   sr: 44100
   sec: 10
   net_pooling_rate: 1
@@ -40,7 +40,7 @@ training:
   sed_eval_thr: 0.5
 
 model:
-  save_path: "/models"
+  save_path: "models"
   cnn:
     num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
     in_channels: 1
