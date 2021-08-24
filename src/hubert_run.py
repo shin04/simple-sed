@@ -35,19 +35,21 @@ def run(cfg: DictConfig) -> None:
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
+    base_dir = Path(cfg['base_dir'])
     log.info(f'start {ex_name} {str(ts)}')
 
     # result_path = Path(cfg['result']['vaild_pred_dir'])
 
-    feat_pathes = [Path(p) for p in cfg['dataset']['feat_pathes']]
-    train_meta = Path(cfg['dataset']['train_meta'])
-    valid_meta = Path(cfg['dataset']['valid_meta'])
-    test_meta = Path(cfg['dataset']['test_meta'])
-    train_weak_label = Path(cfg['dataset']['train_weak_label'])
-    valid_weak_label = Path(cfg['dataset']['valid_weak_label'])
-    test_weak_label = Path(cfg['dataset']['test_weak_label'])
-    test_duration = Path(cfg['dataset']['test_duration'])
-    model_path = Path(cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
+    feat_pathes = [base_dir / Path(p) for p in cfg['dataset']['feat_pathes']]
+    train_meta = base_dir / Path(cfg['dataset']['train_meta'])
+    valid_meta = base_dir / Path(cfg['dataset']['valid_meta'])
+    test_meta = base_dir / Path(cfg['dataset']['test_meta'])
+    train_weak_label = base_dir / Path(cfg['dataset']['train_weak_label'])
+    valid_weak_label = base_dir / Path(cfg['dataset']['valid_weak_label'])
+    test_weak_label = base_dir / Path(cfg['dataset']['test_weak_label'])
+    test_duration = base_dir / Path(cfg['dataset']['test_duration'])
+    model_path = \
+        base_dir / Path(cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
 
     sr = cfg['dataset']['sr']
     sec = cfg['dataset']['sec']
@@ -208,7 +210,7 @@ def run(cfg: DictConfig) -> None:
         """test step"""
         log.info("start evaluate ...")
 
-        model = CRNN(
+        model = HuCRNN(
             **cfg['model']['dence'],
             cnn_cfg=dict(cfg['model']['cnn']),
             rnn_cfg=dict(cfg['model']['rnn']),

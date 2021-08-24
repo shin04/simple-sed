@@ -37,21 +37,21 @@ def run(cfg: DictConfig) -> None:
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
+    base_dir = Path(cfg['base_dir'])
     log.info(f'start {ex_name} {str(ts)}')
 
-    result_path = Path(cfg['result']['vaild_pred_dir'])
+    result_path = base_dir / Path(cfg['result']['vaild_pred_dir'])
 
-    audio_path = Path(cfg['dataset']['audio_path'])
-    train_meta = Path(cfg['dataset']['train_meta'])
-    valid_meta = Path(cfg['dataset']['valid_meta'])
-    test_meta = Path(cfg['dataset']['test_meta'])
-    train_weak_label = Path(cfg['dataset']['train_weak_label'])
-    valid_weak_label = Path(cfg['dataset']['valid_weak_label'])
-    test_weak_label = Path(cfg['dataset']['test_weak_label'])
-    # train_duration = Path(cfg['dataset']['train_duration'])
-    # valid_duration = Path(cfg['dataset']['valid_duration'])
-    test_duration = Path(cfg['dataset']['test_duration'])
-    model_path = Path(cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
+    audio_path = base_dir / Path(cfg['dataset']['audio_path'])
+    train_meta = base_dir / Path(cfg['dataset']['train_meta'])
+    valid_meta = base_dir / Path(cfg['dataset']['valid_meta'])
+    test_meta = base_dir / Path(cfg['dataset']['test_meta'])
+    train_weak_label = base_dir / Path(cfg['dataset']['train_weak_label'])
+    valid_weak_label = base_dir / Path(cfg['dataset']['valid_weak_label'])
+    test_weak_label = base_dir / Path(cfg['dataset']['test_weak_label'])
+    test_duration = base_dir / Path(cfg['dataset']['test_duration'])
+    model_path = base_dir / Path(
+        cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
 
     sr = cfg['dataset']['sr']
     sample_sec = cfg['dataset']['sec']
@@ -167,7 +167,8 @@ def run(cfg: DictConfig) -> None:
             mlflow.log_metric('valid/sed_eval/event/overall_f1',
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
-            log.info(f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
+            log.info(
+                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
             log.info(
                 f'[TRAIN] train loss(strong):{train_strong_loss: .4f}, ' +
                 f'train loss(weak):{train_weak_loss: .4f}, ' +
@@ -260,7 +261,8 @@ def run(cfg: DictConfig) -> None:
         for i in range(cfg['evaluate']['psds']['val_num']):
             score = test_psds_eval_list[i]
             f1 = test_psds_macro_f1_list[i]
-            log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
+            log.info(
+                f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
         np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 
