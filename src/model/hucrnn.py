@@ -8,7 +8,7 @@ from model.cnn import CNN
 from model.gru import BidirectionalGRU
 
 
-class CRNN(nn.Module):
+class HuCRNN(nn.Module):
     def __init__(
         self,
         cnn_cfg: dict = {},
@@ -16,14 +16,19 @@ class CRNN(nn.Module):
         dropout_rate: float = 0.5,
         out_features: int = 10,
         attention: bool = True,
+        n_feats: int = 1
     ) -> None:
-        super(CRNN, self).__init__()
+        super(HuCRNN, self).__init__()
+
+        self.n_feats = n_feats
+        if n_feats != 1:
+            self.fc1 = nn.Linear(n_feats, 1)
 
         self.cnn = CNN(**cnn_cfg)
         self.rnn = BidirectionalGRU(**rnn_cfg)
 
         self.dropout = nn.Dropout(dropout_rate)
-        self.dense = nn.Linear(rnn_cfg['hidden_size'] * 2, out_features)
+        self.fc2 = nn.Linear(rnn_cfg['hidden_size'] * 2, out_features)
         self.sigmoid = nn.Sigmoid()
 
         self.attention = attention
@@ -34,10 +39,18 @@ class CRNN(nn.Module):
 
     def forward(self, input):
         """
-        input: waveform (batch_size, frames)
+        input: 
+            when use multi layer feature,
+                HuBERT feature (batch_size, frame, 768, layer)
+            when use single layer feature,
+                HuBERT feature (batch_size, frame, 768)
         """
 
-        x = input.transpose(1, 2).unsqueeze(1)
+        if self.n_feats == 1:
+            x = input.unsqueeze(1)
+        else:
+            x = self.fc1(input)
+            x = x.permute(0, 3, 1, 2)
 
         x = self.cnn(x)
 
@@ -48,7 +61,7 @@ class CRNN(nn.Module):
         x = self.rnn(x)
         x = self.dropout(x)
 
-        strong_digit = self.dense(x)
+        strong_digit = self.fc2(x)
         strong = self.sigmoid(strong_digit)
 
         if self.attention:
@@ -63,13 +76,13 @@ class CRNN(nn.Module):
 
 
 if __name__ == '__main__':
-    with open('../config/baseline.yaml') as yml:
+    with open('../config/hubert.yaml') as yml:
         conf = yaml.load(yml)
 
     model_conf = conf['model']
-    model = CRNN(
+    model = HuCRNN(
         cnn_cfg=model_conf['cnn'],
-        rnn_cfg=model_conf['rnn']
+        rnn_cfg=model_conf['rnn'],
+        n_feats=12
     ).cpu()
-    summary(model, input_size=(8, 128, 1000))
-    # summary(model, input_size=(8, 768, 499))
+    summary(model, input_size=(8, 499, 768, 12))

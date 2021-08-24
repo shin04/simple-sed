@@ -14,7 +14,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
-from model.crnn import CRNN
+from model.hucrnn import HuCRNN
 from dataset.hubert_feat import HuBERTDataset
 from training.hubert_train import train, valid
 from training.hubert_test import test
@@ -39,15 +39,13 @@ def run(cfg: DictConfig) -> None:
 
     # result_path = Path(cfg['result']['vaild_pred_dir'])
 
-    feat_path = Path(cfg['dataset']['feat_path'])
+    feat_pathes = [Path(p) for p in cfg['dataset']['feat_pathes']]
     train_meta = Path(cfg['dataset']['train_meta'])
     valid_meta = Path(cfg['dataset']['valid_meta'])
     test_meta = Path(cfg['dataset']['test_meta'])
     train_weak_label = Path(cfg['dataset']['train_weak_label'])
     valid_weak_label = Path(cfg['dataset']['valid_weak_label'])
     test_weak_label = Path(cfg['dataset']['test_weak_label'])
-    # train_duration = Path(cfg['dataset']['train_duration'])
-    # valid_duration = Path(cfg['dataset']['valid_duration'])
     test_duration = Path(cfg['dataset']['test_duration'])
     model_path = Path(cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
 
@@ -72,7 +70,7 @@ def run(cfg: DictConfig) -> None:
 
     """prepare datasets"""
     train_dataset = HuBERTDataset(
-        feat_path=feat_path / 'train',
+        feat_pathes=[p / 'train' for p in feat_pathes],
         metadata_path=train_meta,
         weak_label_path=train_weak_label,
         sr=sr,
@@ -81,7 +79,7 @@ def run(cfg: DictConfig) -> None:
         transforms=None
     )
     valid_dataset = HuBERTDataset(
-        feat_path=feat_path / 'valid',
+        feat_pathes=[p / 'valid' for p in feat_pathes],
         metadata_path=valid_meta,
         weak_label_path=valid_weak_label,
         sr=sr,
@@ -90,7 +88,7 @@ def run(cfg: DictConfig) -> None:
         transforms=None
     )
     test_dataset = HuBERTDataset(
-        feat_path=feat_path/'test',
+        feat_pathes=[p / 'test' for p in feat_pathes],
         metadata_path=test_meta,
         weak_label_path=test_weak_label,
         sr=sr,
@@ -116,11 +114,12 @@ def run(cfg: DictConfig) -> None:
         raise RuntimeError("class_map is wrong")
 
     """prepare training"""
-    model = CRNN(
+    model = HuCRNN(
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
-        attention=True
+        attention=True,
+        n_feats=len(feat_pathes)
     ).to(device)
     early_stopping = EarlyStopping(patience=es_patience)
     optimizer = optim.Adam(model.parameters(), lr=lr, amsgrad=False)
@@ -172,7 +171,8 @@ def run(cfg: DictConfig) -> None:
             mlflow.log_metric('valid/sed_eval/event/overall_f1',
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
-            log.info(f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
+            log.info(
+                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
             log.info(
                 f'[TRAIN] train loss(strong):{train_strong_loss: .4f}, ' +
                 f'train loss(weak):{train_weak_loss: .4f}, ' +
@@ -243,7 +243,8 @@ def run(cfg: DictConfig) -> None:
         for i in range(cfg['evaluate']['psds']['val_num']):
             score = test_psds_eval_list[i]
             f1 = test_psds_macro_f1_list[i]
-            log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
+            log.info(
+                f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
         mlflow.log_artifact('.hydra/config.yaml')
         mlflow.log_artifact('.hydra/hydra.yaml')
