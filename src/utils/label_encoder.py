@@ -51,6 +51,7 @@ def strong_label_decoding(
     net_pooling_rate: int,
     class_map: dict,
     threshold: float | dict = 0.5,
+    median_filter: int = 7
 ) -> list:
     """
     strong_label_decoding converts a prediction to a strong label.
@@ -59,7 +60,7 @@ def strong_label_decoding(
 
     Prameters
     ---------
-    preds: (frames, class)
+    preds: (class, frame)
     binarization_type:
         global_threshold or class_threshold
     """
@@ -74,12 +75,18 @@ def strong_label_decoding(
         for cls in classes:
             th_list.append(threshold[cls])
 
+    for i in range(len(preds)):
+        preds[i] = preds[i] > th_list[i]
+
+    # apply median filter
+    preds = scipy.ndimage.filters.median_filter(preds, (1, median_filter))
+
     result_label = []
     for i, pred in enumerate(preds):
         event = classes[i]
 
-        pred_section = pred > th_list[i]
-        pred_section = scipy.ndimage.filters.median_filter(pred_section, 7)
+        # pred = pred > th_list[i]
+        # pred = scipy.ndimage.filters.median_filter(pred, (7, 1))
 
         # pred_section = pred.copy()
         # pred_section = ProbabilityEncoder().binarization(
@@ -87,7 +94,7 @@ def strong_label_decoding(
         #     threshold=th_list[i],
         # )
 
-        change_indices = DecisionEncoder().find_contiguous_regions(pred_section)
+        change_indices = DecisionEncoder().find_contiguous_regions(pred)
         change_indices = change_indices / sr * frame_hop * net_pooling_rate
         for indice in change_indices:
             onset = indice[0]
@@ -124,7 +131,7 @@ if __name__ == '__main__':
         'soundscape_train_uniform1090.wav',
         44100, 256, 1,
         class_map,
-        [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+        0.5
     )
     result_df = pd.DataFrame(result_label)
     print(result_df)

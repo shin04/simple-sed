@@ -145,7 +145,8 @@ def run(cfg: DictConfig) -> None:
             ) = valid(
                 model, valid_dataloader, device, criterion,
                 valid_dataset.class_map, thresholds,
-                cfg['training']['sed_eval_thr'], valid_meta,
+                cfg['evaluate']['median_filter'], cfg['training']['sed_eval_thr'],
+                valid_meta,
                 sr, hop_length, net_pooling_rate
             )
 
@@ -167,7 +168,8 @@ def run(cfg: DictConfig) -> None:
             mlflow.log_metric('valid/sed_eval/event/overall_f1',
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
-            log.info(f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
+            log.info(
+                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
             log.info(
                 f'[TRAIN] train loss(strong):{train_strong_loss: .4f}, ' +
                 f'train loss(weak):{train_weak_loss: .4f}, ' +
@@ -239,7 +241,7 @@ def run(cfg: DictConfig) -> None:
             test_pred_dict
         ) = test(
             model, test_dataloader, device, test_dataset.class_map,
-            cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
+            cfg['evaluate']['thresholds'], cfg['evaluate']['median_filter'], cfg['training']['sed_eval_thr'],
             psds_params, test_meta, test_duration,
             sr, hop_length, net_pooling_rate,
             # best_th
@@ -260,7 +262,8 @@ def run(cfg: DictConfig) -> None:
         for i in range(cfg['evaluate']['psds']['val_num']):
             score = test_psds_eval_list[i]
             f1 = test_psds_macro_f1_list[i]
-            log.info(f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
+            log.info(
+                f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
         np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 

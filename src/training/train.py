@@ -70,6 +70,7 @@ def valid(
     criterion: nn.Module,
     class_map: dict,
     thresholds: list,
+    median_filter: float,
     sed_eval_thr: float,
     meta_strong: Path,
     sr: int,
@@ -117,7 +118,7 @@ def valid(
 
                 for thr in thresholds:
                     result = strong_label_decoding(
-                        pred, item['filename'][i], sr, hop_length, pooling_rate, class_map, thr
+                        pred, item['filename'][i], sr, hop_length, pooling_rate, class_map, thr, median_filter
                     )
                     results[thr] += result
 
