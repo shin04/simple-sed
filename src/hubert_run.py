@@ -215,7 +215,8 @@ def run(cfg: DictConfig) -> None:
             **cfg['model']['dence'],
             cnn_cfg=dict(cfg['model']['cnn']),
             rnn_cfg=dict(cfg['model']['rnn']),
-            attention=True
+            attention=True,
+            n_feats=len(feat_pathes)
         ).to(device)
         model.load_state_dict(torch.load(model_path))
 
