@@ -29,8 +29,10 @@ log = logging.getLogger(__name__)
 
 @hydra.main(config_path='../config', config_name='baseline.yaml')
 def run(cfg: DictConfig) -> None:
+    base_dir = Path(cfg['base_dir'])
+
     load_dotenv(verbose=True)
-    load_dotenv(cfg['environments'])
+    load_dotenv(base_dir / cfg['environments'])
     tracking_url = os.environ.get('TRACKING_URL')
     ts = datetime.now().strftime(TIME_TEMPLATE)
 
@@ -40,18 +42,18 @@ def run(cfg: DictConfig) -> None:
     base_dir = Path(cfg['base_dir'])
     log.info(f'start {ex_name} {str(ts)}')
 
-    result_path = base_dir / Path(cfg['result']['vaild_pred_dir'])
+    result_path = base_dir / cfg['result']['vaild_pred_dir']
 
-    audio_path = base_dir / Path(cfg['dataset']['audio_path'])
-    train_meta = base_dir / Path(cfg['dataset']['train_meta'])
-    valid_meta = base_dir / Path(cfg['dataset']['valid_meta'])
-    test_meta = base_dir / Path(cfg['dataset']['test_meta'])
-    train_weak_label = base_dir / Path(cfg['dataset']['train_weak_label'])
-    valid_weak_label = base_dir / Path(cfg['dataset']['valid_weak_label'])
-    test_weak_label = base_dir / Path(cfg['dataset']['test_weak_label'])
-    test_duration = base_dir / Path(cfg['dataset']['test_duration'])
-    model_path = base_dir / Path(
-        cfg['model']['save_path']) / f'{ex_name}-{ts}-best.pt'
+    audio_path = base_dir / cfg['dataset']['audio_path']
+    train_meta = base_dir / cfg['dataset']['train_meta']
+    valid_meta = base_dir / cfg['dataset']['valid_meta']
+    test_meta = base_dir / cfg['dataset']['test_meta']
+    train_weak_label = base_dir / cfg['dataset']['train_weak_label']
+    valid_weak_label = base_dir / cfg['dataset']['valid_weak_label']
+    test_weak_label = base_dir / cfg['dataset']['test_weak_label']
+    test_duration = base_dir / cfg['dataset']['test_duration']
+    model_path = base_dir / \
+        cfg['model']['save_path'] / f'{ex_name}-{ts}-best.pt'
 
     sr = cfg['dataset']['sr']
     sample_sec = cfg['dataset']['sec']

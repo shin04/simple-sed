@@ -39,7 +39,7 @@ class HuCRNN(nn.Module):
 
     def forward(self, input):
         """
-        input: 
+        input:
             when use multi layer feature,
                 HuBERT feature (batch_size, frame, 768, layer)
             when use single layer feature,
