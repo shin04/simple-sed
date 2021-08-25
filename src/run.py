@@ -39,6 +39,7 @@ def run(cfg: DictConfig) -> None:
     """prepare parameters"""
     ex_name = cfg['ex_name']
     device = torch.device(cfg['device'])
+    base_dir = Path(cfg['base_dir'])
     log.info(f'start {ex_name} {str(ts)}')
 
     result_path = base_dir / cfg['result']['vaild_pred_dir']
