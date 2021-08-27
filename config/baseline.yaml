@@ -61,6 +61,7 @@ model:
 
 evaluate:
   thresholds: [0.1, 0.3, 0.5, 0.7, 0.9]
+  median_filter: 7
   psds:
     val_num: 3
     dtc_thresholds: [0.7, 0.5, 0.1]

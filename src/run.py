@@ -147,7 +147,8 @@ def run(cfg: DictConfig) -> None:
             ) = valid(
                 model, valid_dataloader, device, criterion,
                 valid_dataset.class_map, thresholds,
-                cfg['training']['sed_eval_thr'], valid_meta,
+                cfg['evaluate']['median_filter'], cfg['training']['sed_eval_thr'],
+                valid_meta,
                 sr, hop_length, net_pooling_rate
             )
 
@@ -242,7 +243,7 @@ def run(cfg: DictConfig) -> None:
             test_pred_dict
         ) = test(
             model, test_dataloader, device, test_dataset.class_map,
-            cfg['evaluate']['thresholds'], cfg['training']['sed_eval_thr'],
+            cfg['evaluate']['thresholds'], cfg['evaluate']['median_filter'], cfg['training']['sed_eval_thr'],
             psds_params, test_meta, test_duration,
             sr, hop_length, net_pooling_rate,
             # best_th

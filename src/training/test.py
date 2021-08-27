@@ -42,6 +42,7 @@ def test(
     device: torch.device,
     class_map: dict,
     thresholds: list,
+    median_filter: float,
     sed_eval_thr: float,
     psds_params: dict,
     meta_strong: Path,
@@ -83,7 +84,7 @@ def test(
                     result = strong_label_decoding(
                         pred, item['filename'][i],
                         sr, hop_length, pooling_rate, class_map,
-                        thr
+                        thr, median_filter
                     )
                     results[thr] += result
 
@@ -103,7 +104,8 @@ def test(
             sed_eval_pred = pd.DataFrame(results[thr])
             if len(sed_eval_pred.columns) != 0:
                 sed_evals[thr] = calc_sed_eval_metrics(
-                    meta_strong, pd.DataFrame(results[thr]), class_map, 0.1, 0.2
+                    meta_strong, pd.DataFrame(
+                        results[thr]), class_map, 0.1, 0.2
                 )
             else:
                 sed_evals[thr] = {
