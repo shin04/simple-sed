@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import scipy
-from dcase_util.data import DecisionEncoder  # , ProbabilityEncoder
+# import scipy
+from scipy.signal import medfilt
+from dcase_util.data import DecisionEncoder, ProbabilityEncoder
 
 
 def strong_label_encoding(
@@ -68,39 +69,33 @@ def strong_label_decoding(
     classes = list(class_map.keys())
 
     # generate threshold list
-    th_list = []
-    if type(threshold) == float:
-        th_list = [threshold] * len(class_map)
-    else:
-        for cls in classes:
-            th_list.append(threshold[cls])
+    # th_list = []
+    # if type(threshold) == float:
+    #     th_list = [threshold] * len(class_map)
+    # else:
+    #     for cls in classes:
+    #         th_list.append(threshold[cls])
 
-    for i in range(len(preds)):
-        preds[i] = preds[i] > th_list[i]
-
-    # apply median filter
-    preds = scipy.ndimage.filters.median_filter(preds, (1, median_filter))
+    preds = ProbabilityEncoder().binarization(
+        preds,
+        threshold=threshold,
+    )
 
     result_label = []
     for i, pred in enumerate(preds):
         event = classes[i]
 
         # pred = pred > th_list[i]
-        # pred = scipy.ndimage.filters.median_filter(pred, (7, 1))
-
-        # pred_section = pred.copy()
-        # pred_section = ProbabilityEncoder().binarization(
-        #     pred,
-        #     threshold=th_list[i],
-        # )
+        # pred = scipy.ndimage.filters.median_filter(pred, median_filter)
+        pred = medfilt(pred, median_filter)
 
         change_indices = DecisionEncoder().find_contiguous_regions(pred)
         change_indices = change_indices / sr * frame_hop * net_pooling_rate
         for indice in change_indices:
-            onset = indice[0]
-            offset = indice[1]
-            if offset > 10:
-                offset = 10.0
+            onset = indice[0].clip(0., 10.)
+            offset = indice[1].clip(0., 10.)
+            # if offset > 10:
+            #     offset = 10.0
             result_label.append(
                 {'filename': filename, 'event_label': event, 'onset': onset, 'offset': offset})
 
