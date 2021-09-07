@@ -25,13 +25,13 @@ feature:
   n_filters: 2048
   n_window: 2048
   hop_length: 1024
-  f_min: 50
+  f_min: 0
   f_max: 8000
   n_mels: 128
 
 training:
   n_epoch: 100
-  batch_size: 32
+  batch_size: 64
   lr: 0.001
   weight_decay: 0
   num_workers: 8

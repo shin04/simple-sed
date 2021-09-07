@@ -10,6 +10,7 @@ __pycache__
 /src/outputs/
 /src/multirun/
 /src/sample*.py
+/src/ex_script/
 
 .env.secret
 
