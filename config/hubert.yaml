@@ -17,21 +17,7 @@ dataset:
   train_duration: "meta/train_meta_duration.csv"
   valid_duration: "meta/valid_meta_duration.csv"
   test_duration: "meta/test_meta_duration.csv"
-  feat_pathes:
-    [
-      "dataset/feat/libri-base-layer-1",
-      "dataset/feat/libri-base-layer-2",
-      "dataset/feat/libri-base-layer-3",
-      "dataset/feat/libri-base-layer-4",
-      "dataset/feat/libri-base-layer-5",
-      "dataset/feat/libri-base-layer-6",
-      "dataset/feat/libri-base-layer-7",
-      "dataset/feat/libri-base-layer-8",
-      "dataset/feat/libri-base-layer-9",
-      "dataset/feat/libri-base-layer-10",
-      "dataset/feat/libri-base-layer-11",
-      "dataset/feat/libri-base-layer-12",
-    ]
+  feat_pathes: ["dataset/feat/base-layer-1"]
   sr: 16000
   sec: 10
   net_pooling_rate: 320

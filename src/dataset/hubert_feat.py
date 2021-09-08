@@ -86,29 +86,7 @@ if __name__ == '__main__':
     dataset = HuBERTDataset(
         feat_pathes=[
             Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-12/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-11/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-10/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-9/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-8/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-7/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-6/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-5/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-4/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-3/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-2/train'),
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed/libri-base-layer-1/train'),
+                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed_audioset/base-layer-1/train'),
         ],
         metadata_path=Path(
             '/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),

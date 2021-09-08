@@ -47,7 +47,8 @@ class HuCRNN(nn.Module):
         """
 
         if self.n_feats == 1:
-            x = input.unsqueeze(1)
+            x = input.squeeze(-1)
+            x = x.unsqueeze(1)
         else:
             x = self.fc1(input)
             x = x.permute(0, 3, 1, 2)
@@ -83,6 +84,8 @@ if __name__ == '__main__':
     model = HuCRNN(
         cnn_cfg=model_conf['cnn'],
         rnn_cfg=model_conf['rnn'],
-        n_feats=12
+        # n_feats=12
+        n_feats=1
     ).cpu()
-    summary(model, input_size=(8, 499, 768, 12))
+    # summary(model, input_size=(8, 499, 768, 12))
+    summary(model, input_size=(8, 499, 768, 1))
