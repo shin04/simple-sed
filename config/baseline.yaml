@@ -4,6 +4,7 @@ base_dir: "/ml"
 environments: ".env.secret"
 
 result:
+  save: false
   vaild_pred_dir: "results"
 
 dataset:

@@ -42,6 +42,7 @@ def run(cfg: DictConfig) -> None:
     base_dir = Path(cfg['base_dir'])
     log.info(f'start {ex_name} {str(ts)}')
 
+    is_save = cfg['result']['save']
     result_path = base_dir / cfg['result']['vaild_pred_dir']
 
     audio_path = base_dir / cfg['dataset']['audio_path']
@@ -193,7 +194,12 @@ def run(cfg: DictConfig) -> None:
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
-                np.save(result_path / f'{ex_name}-{ts}-valid.npy', pred_dict)
+
+                if is_save:
+                    np.save(
+                        result_path / f'{ex_name}-{ts}-valid.npy', pred_dict
+                    )
+
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 log.info(f'update best model (loss: {best_loss})')
@@ -267,7 +273,8 @@ def run(cfg: DictConfig) -> None:
             log.info(
                 f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
-        np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
+        if is_save:
+            np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 
         mlflow.log_artifact('.hydra/config.yaml')
         mlflow.log_artifact('.hydra/hydra.yaml')
