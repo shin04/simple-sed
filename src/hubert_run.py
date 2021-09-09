@@ -8,7 +8,7 @@ import hydra
 import mlflow
 from omegaconf import DictConfig
 from dotenv import load_dotenv
-# import numpy as np
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -40,7 +40,7 @@ def run(cfg: DictConfig) -> None:
     base_dir = Path(cfg['base_dir'])
     log.info(f'start {ex_name} {str(ts)}')
 
-    # result_path = base_dir / cfg['result']['vaild_pred_dir']
+    result_path = base_dir / cfg['result']['vaild_pred_dir']
 
     feat_pathes = [base_dir / p for p in cfg['dataset']['feat_pathes']]
     train_meta = base_dir / cfg['dataset']['train_meta']
@@ -250,6 +250,8 @@ def run(cfg: DictConfig) -> None:
             f1 = test_psds_macro_f1_list[i]
             log.info(
                 f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
+
+        np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
 
         mlflow.log_artifact('.hydra/config.yaml')
         mlflow.log_artifact('.hydra/hydra.yaml')
