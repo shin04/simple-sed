@@ -64,7 +64,7 @@ if __name__ == '__main__':
     '''
     example
     pred_path: /home/kajiwara21/nas02/home/results/sed/baseline-20210823035150-test.npy
-    audio_parh: /home/kajiwara21/dataset/URBAN-SED_v2.0.0/audio/test
+    audio_parh: /home/kajiwara21/dataset/URBAN-SED_v2.0.0/audio/test-16k
     weak_path: /home/kajiwara21/work/sed/meta/test_meta_weak.csv
     out_path: /home/kajiwara21/work/sed/visualize_result
     output_name: result.png
