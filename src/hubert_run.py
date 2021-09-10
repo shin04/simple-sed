@@ -75,7 +75,7 @@ def run(cfg: DictConfig) -> None:
 
     """prepare datasets"""
     train_dataset = HuBERTDataset(
-        feat_pathes=[p / 'train-16k' for p in feat_pathes],
+        feat_pathes=[p / 'train' for p in feat_pathes],
         metadata_path=train_meta,
         weak_label_path=train_weak_label,
         sr=sr,
@@ -84,7 +84,7 @@ def run(cfg: DictConfig) -> None:
         transforms=None
     )
     valid_dataset = HuBERTDataset(
-        feat_pathes=[p / 'valid-16k' for p in feat_pathes],
+        feat_pathes=[p / 'valid' for p in feat_pathes],
         metadata_path=valid_meta,
         weak_label_path=valid_weak_label,
         sr=sr,
@@ -93,7 +93,7 @@ def run(cfg: DictConfig) -> None:
         transforms=None
     )
     test_dataset = HuBERTDataset(
-        feat_pathes=[p / 'test-16k' for p in feat_pathes],
+        feat_pathes=[p / 'test' for p in feat_pathes],
         metadata_path=test_meta,
         weak_label_path=test_weak_label,
         sr=sr,
