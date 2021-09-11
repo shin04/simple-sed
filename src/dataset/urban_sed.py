@@ -8,7 +8,6 @@ import torchvision.transforms as T
 from torch.utils.data import Dataset
 
 from utils.label_encoder import strong_label_encoding
-from utils.extract_melspec import extract_melspec
 
 
 class StrongDataset(Dataset):
@@ -56,8 +55,6 @@ class StrongDataset(Dataset):
                               'constant', constant_values=0)
         else:
             waveform = waveform[:self.sample_len]
-
-        # waveform = extract_melspec(waveform)
 
         waveform = torch.from_numpy(waveform).float()
         if self.transforms is not None:
