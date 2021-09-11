@@ -27,7 +27,7 @@ feature:
   n_window: 2048
   hop_length: 1024
   f_min: 0
-  f_max: 8000
+  f_max: 22015
   n_mels: 128
 
 training:
