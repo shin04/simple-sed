@@ -34,9 +34,10 @@ class CRNN(nn.Module):
 
     def forward(self, input):
         """
-        input: waveform (batch_size, frames)
+        input: waveform (batch_size, channels, freq, frames)
         """
 
+        # (batch_size, channels, freq, frames) -> (batch_size, channels, frames, freq)
         x = input.transpose(1, 2).unsqueeze(1)
 
         x = self.cnn(x)

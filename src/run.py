@@ -80,6 +80,7 @@ def run(cfg: DictConfig) -> None:
     """prepare datasets"""
     get_melspec = GetMelSpectrogram(sr=sr, **cfg['feature'], log_scale=True)
     transforms = T.Compose([get_melspec])
+    # transforms = None
 
     train_dataset = StrongDataset(
         audio_path=audio_path / 'train',
