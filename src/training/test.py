@@ -102,22 +102,10 @@ def test(
         sed_evals = {}
         for thr in thresholds:
             sed_eval_pred = pd.DataFrame(results[thr])
-            if len(sed_eval_pred.columns) != 0:
-                sed_evals[thr] = calc_sed_eval_metrics(
-                    meta_strong, pd.DataFrame(
-                        results[thr]), class_map, 0.1, 0.2
-                )
-            else:
-                sed_evals[thr] = {
-                    'segment': {
-                        'class_wise_f1': 0.0,
-                        'overall_f1': 0.0,
-                    },
-                    'event': {
-                        'class_wise_f1': 0.0,
-                        'overall_f1': 0.0,
-                    }
-                }
+            sed_evals[thr] = calc_sed_eval_metrics(
+                meta_strong, sed_eval_pred, class_map, 0.1, 0.2
+            )
+
         print(sed_evals)
 
         psds_eval_list, psds_macro_f1_list = [], []

@@ -123,21 +123,9 @@ def valid(
                     results[thr] += result
 
         sed_eval_pred = pd.DataFrame(results[sed_eval_thr])
-        if len(sed_eval_pred.columns) != 0:
-            sed_evals = calc_sed_eval_metrics(
-                meta_strong, sed_eval_pred, class_map, 0.1, 0.2
-            )
-        else:
-            sed_evals = {
-                'segment': {
-                    'class_wise_f1': 0.0,
-                    'overall_f1': 0.0,
-                },
-                'event': {
-                    'class_wise_f1': 0.0,
-                    'overall_f1': 0.0,
-                }
-            }
+        sed_evals = calc_sed_eval_metrics(
+            meta_strong, sed_eval_pred, class_map, 0.1, 0.2
+        )
 
         valid_strong_loss = valid_strong_loss_sum / n_batch
         valid_weak_loss = valid_weak_loss_sum / n_batch

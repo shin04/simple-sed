@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -68,6 +69,12 @@ def calc_sed_eval_metrics(
     t_collar: float,
     is_training: bool = True,
 ) -> dict:
+    if len(prediction.columns) == 0:
+        return {
+            'segment': {'class_wise_f1': 0.0, 'overall_f1': 0.0, },
+            'event': {'class_wise_f1': 0.0, 'overall_f1': 0.0, }
+        }
+
     meta_df = pd.read_csv(metadata_path)
     grand_truth = meta_df
 
@@ -158,15 +165,20 @@ def calc_psds_eval_metrics(
     psds_macro_f1 = np.mean(psds_macro_f1)
 
     """calculation psds"""
-    for i, k in enumerate(predictions.keys()):
-        pred_df = pd.DataFrame(predictions[k])
-        det = pred_df
-        psds_eval.add_operating_point(
-            det, info={"name": f"Op {i + 1:02d}", "threshold": k}
-        )
+    try:
+        for i, k in enumerate(predictions.keys()):
+            pred_df = pd.DataFrame(predictions[k])
+            det = pred_df
+            psds_eval.add_operating_point(
+                det, info={"name": f"Op {i + 1:02d}", "threshold": k}
+            )
 
-    psds_score = psds_eval.psds(
-        alpha_ct=alpha_ct, alpha_st=alpha_st, max_efpr=max_efpr)
+        psds_score = psds_eval.psds(
+            alpha_ct=alpha_ct, alpha_st=alpha_st, max_efpr=max_efpr)
+    except Exception as e:
+        logging.error(e)
+
+        return 0., psds_macro_f1
 
     return psds_score.value, psds_macro_f1
 
