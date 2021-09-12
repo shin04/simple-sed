@@ -80,10 +80,6 @@ def calc_sed_eval_metrics(
 
     evaluated_files = meta_df["filename"].unique()
     classes = list(class_map.keys())
-    # classes = []
-    # classes.extend(meta_df.event_label.dropna().unique())
-    # classes.extend(prediction.event_label.dropna().unique())
-    # classes = sorted(list(set(classes)))
 
     segment_based_metrics = SegmentBasedMetrics(
         event_label_list=classes,

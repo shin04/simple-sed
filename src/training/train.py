@@ -124,7 +124,7 @@ def valid(
 
         sed_eval_pred = pd.DataFrame(results[sed_eval_thr])
         sed_evals = calc_sed_eval_metrics(
-            meta_strong, sed_eval_pred, class_map, 0.1, 0.2
+            meta_strong, sed_eval_pred, class_map, 1.0, 0.2
         )
 
         valid_strong_loss = valid_strong_loss_sum / n_batch

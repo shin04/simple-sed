@@ -3,12 +3,16 @@ from pathlib import Path
 from typing import List, Callable
 import argparse
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-from training.hubert_test import test
+from training.test import test as normal_test_fn
+from training.hubert_test import test as hubert_test_fn
 from model.crnn import CRNN
+from model.hucrnn import HuCRNN
+from dataset.urban_sed import StrongDataset
 from dataset.hubert_feat import HuBERTDataset
 
 
@@ -26,6 +30,7 @@ def test_process(
     test_duration: Path,
     sr: int,
     net_pooling_rate: int,
+    save_path: Path
 ):
     model.load_state_dict(torch.load(model_path))
 
@@ -59,11 +64,17 @@ def test_process(
             f'macro f1 ({i}):{f1: .4f}'
         )
 
+    if save_path is not None:
+        np.save(save_path, test_pred_dict)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('model')
     parser.add_argument('model_path')
     parser.add_argument('feat_path')
+    parser.add_argument('-g', '--gpu', action='store_true')
+    parser.add_argument('-s', '--save_path', default=None)
     args = parser.parse_args()
 
     model_path = Path(args.model_path)
@@ -73,31 +84,63 @@ if __name__ == '__main__':
     test_duration = Path(
         '/home/kajiwara21/work/sed/meta/test_meta_duration.csv')
 
+    if args.save_path is not None:
+        save_path = Path(args.save_path)
+
     with open('../config/hubert.yaml') as f:
         cfg = yaml.load(f)
 
-    device = torch.device('cpu')
+    if args.gpu:
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
 
-    dataset = HuBERTDataset(
-        feat_path=feat_path/'test',
-        metadata_path=test_meta,
-        weak_label_path=test_weak_label,
-        sr=cfg['dataset']['sr'],
-        sec=cfg['dataset']['sec'],
-        net_pooling_rate=cfg['dataset']['net_pooling_rate'],
-        transforms=None
-    )
+    if args.model == 'crnn':
+        dataset = StrongDataset(
+            feat_pathes=[feat_path/'test'],
+            metadata_path=test_meta,
+            weak_label_path=test_weak_label,
+            sr=cfg['dataset']['sr'],
+            sec=cfg['dataset']['sec'],
+            net_pooling_rate=cfg['dataset']['net_pooling_rate'],
+            transforms=None
+        )
+
+        model = CRNN(
+            **cfg['model']['dence'],
+            cnn_cfg=dict(cfg['model']['cnn']),
+            rnn_cfg=dict(cfg['model']['rnn']),
+            attention=True
+        ).to(device)
+
+        test_fn = normal_test_fn
+    elif args.model == 'hucrnn':
+        dataset = HuBERTDataset(
+            feat_pathes=[feat_path/'test'],
+            metadata_path=test_meta,
+            weak_label_path=test_weak_label,
+            sr=cfg['dataset']['sr'],
+            sec=cfg['dataset']['sec'],
+            net_pooling_rate=cfg['dataset']['net_pooling_rate'],
+            transforms=None
+        )
+
+        model = HuCRNN(
+            **cfg['model']['dence'],
+            cnn_cfg=dict(cfg['model']['cnn']),
+            rnn_cfg=dict(cfg['model']['rnn']),
+            attention=True,
+            n_feats=1
+        )
+
+        test_fn = hubert_test_fn
+    else:
+        raise RuntimeError(f'{args.model} is not defined')
+
     dataloader = DataLoader(
         dataset, batch_size=cfg['training']['batch_size'], shuffle=False,
         num_workers=cfg['training']['batch_size'], pin_memory=True
     )
-
-    model = CRNN(
-        **cfg['model']['dence'],
-        cnn_cfg=dict(cfg['model']['cnn']),
-        rnn_cfg=dict(cfg['model']['rnn']),
-        attention=True
-    ).to(device)
 
     test_process(
         device,
@@ -105,7 +148,7 @@ if __name__ == '__main__':
         model_path,
         dataset,
         dataloader,
-        test,
+        test_fn,
         cfg['evaluate']['thresholds'],
         cfg['training']['sed_eval_thr'],
         cfg['evaluate']['psds'],
@@ -113,4 +156,5 @@ if __name__ == '__main__':
         test_duration,
         cfg['dataset']['sr'],
         cfg['dataset']['net_pooling_rate'],
+        save_path
     )
