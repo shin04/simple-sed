@@ -274,7 +274,17 @@ def run(cfg: DictConfig) -> None:
                 f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
         if is_save:
-            np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
+            p = result_path / f'{ex_name}-{ts}-test.npy'
+            np.save(p, test_pred_dict)
+            log.info(f'saved predict at {p}')
+
+        if not cfg['model']['save']:
+            try:
+                model_path.unlink()
+                log.info(f'deleted model at {model_path}')
+            except Exception as e:
+                log.info(f'failed deleting model at {model_path}')
+                log.error(e)
 
         mlflow.log_artifact('.hydra/config.yaml')
         mlflow.log_artifact('.hydra/hydra.yaml')
