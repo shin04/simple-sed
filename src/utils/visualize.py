@@ -9,7 +9,14 @@ import soundfile as sf
 
 
 def sed_res_visualize(
-    pred_path: Path, audio_path: Path, weak_path: Path, out_path: Path, output_name: str
+    pred_path: Path,
+    audio_path: Path,
+    weak_path: Path,
+    out_path: Path,
+    output_name: str,
+    n_fft: int = 2048,
+    hop_length: int = 1024,
+    pooling_rate: int = 1
 ) -> None:
 
     if not pred_path.exists():
@@ -34,10 +41,16 @@ def sed_res_visualize(
     top_result_mat = v[:, sorted_indexes[0:]]
 
     waveform, sr = sf.read(audio_path / k)
-    frames_per_second = sr // 1024
+    _hop_length = hop_length * pooling_rate
+    frames_per_second = sr // (_hop_length)
 
-    stft = librosa.stft(y=waveform, n_fft=2048,
-                        hop_length=1024, window='hann', center=True)
+    stft = librosa.stft(
+        y=waveform,
+        n_fft=n_fft,
+        hop_length=_hop_length,
+        window='hann',
+        center=True
+    )
     frames_num = stft.shape[-1]
 
     fig, axs = plt.subplots(2, 1, sharex=True, figsize=(10, 4))
@@ -76,15 +89,34 @@ if __name__ == '__main__':
         'audio_path', help='to raw audio (used by prediction) path')
     parser.add_argument('weak_path', help='to weak label (tsv) path')
     parser.add_argument(
-        'out_path', help='to saving visualize prediction path', default='../visualize_result')
+        '--out_path', default='../visualize_result',
+        help='to saving visualize prediction path'
+    )
     parser.add_argument(
-        'output_name', help='result image name', default='result.png')
+        '--output_name', default='result.png',
+        help='result image name'
+    )
+    parser.add_argument(
+        '--n_fft', type=int, default=2048, help='number of fft')
+    parser.add_argument(
+        '--hop_length', type=int, default=1024, help='hop length')
+    parser.add_argument(
+        '--pooling_rate', type=int, default=1, help='network pooling rate')
+
     args = parser.parse_args()
 
     pred_path = Path(args.pred_path)
     audio_path = Path(args.audio_path)
     weak_path = Path(args.weak_path)
     out_path = Path(args.out_path)
-    output_name = args.output_name
 
-    sed_res_visualize(pred_path, audio_path, weak_path, out_path, output_name)
+    sed_res_visualize(
+        pred_path,
+        audio_path,
+        weak_path,
+        out_path,
+        args.output_name,
+        args.n_fft,
+        args.hop_length,
+        args.pooling_rate
+    )
