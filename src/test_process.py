@@ -74,7 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('model_path')
     parser.add_argument('feat_path')
     parser.add_argument('-g', '--gpu', action='store_true')
-    parser.add_argument('-s', '--save_path', default=None)
+    parser.add_argument('-s', '--save_path')
     args = parser.parse_args()
 
     model_path = Path(args.model_path)
@@ -86,6 +86,8 @@ if __name__ == '__main__':
 
     if args.save_path is not None:
         save_path = Path(args.save_path)
+    else:
+        save_path = None
 
     with open('../config/hubert.yaml') as f:
         cfg = yaml.load(f)
@@ -97,7 +99,7 @@ if __name__ == '__main__':
 
     if args.model == 'crnn':
         dataset = StrongDataset(
-            feat_pathes=[feat_path/'test'],
+            feat_path=feat_path/'test',
             metadata_path=test_meta,
             weak_label_path=test_weak_label,
             sr=cfg['dataset']['sr'],
