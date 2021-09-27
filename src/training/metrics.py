@@ -204,7 +204,7 @@ def search_best_threshold(
             )
 
         _, events_metric = calc_sed_eval_metrics(
-            meta_path, pd.DataFrame(result), 0.1, 0.2, False
+            meta_path, pd.DataFrame(result), 1.0, 0.2, False
         )
 
         for i, label in enumerate(labels):
