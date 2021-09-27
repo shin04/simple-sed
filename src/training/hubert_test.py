@@ -102,7 +102,7 @@ def test(
         for thr in thresholds:
             sed_eval_pred = pd.DataFrame(results[thr])
             sed_evals[thr] = calc_sed_eval_metrics(
-                meta_strong, sed_eval_pred, class_map, 0.1, 0.2
+                meta_strong, sed_eval_pred, class_map, 1.0, 0.2
             )
         print(sed_evals)
 
