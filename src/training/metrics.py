@@ -115,7 +115,9 @@ def calc_sed_eval_metrics(
     segment_res = segment_based_metrics.results()
     event_res = event_based_metrics.results()
 
-    print(event_res['class_wise'])
+    event_details = {}
+    for event in classes:
+        event_details[event] = event_res['class_wise'][event]['f_measure']['f_measure']
 
     if is_training:
         return {
@@ -126,6 +128,7 @@ def calc_sed_eval_metrics(
             'event': {
                 'class_wise_f1': event_res['class_wise_average']['f_measure']['f_measure'],
                 'overall_f1': event_res['overall']['f_measure']['f_measure'],
+                'detail': event_details
             },
         }
     else:
