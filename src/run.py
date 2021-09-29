@@ -191,6 +191,9 @@ def run(cfg: DictConfig) -> None:
                 f'[VALID F1(event)] event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f} ' +
                 f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}'
             )
+            for event in list(valid_dataset.class_map.keys()):
+                log.info(
+                    f'{event} : {valid_sed_evals["event"]["detail"][event]: .4f}')
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
