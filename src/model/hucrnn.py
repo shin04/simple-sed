@@ -29,6 +29,7 @@ class HuCRNN(nn.Module):
 
         self.dropout = nn.Dropout(dropout_rate)
         self.fc2 = nn.Linear(rnn_cfg['hidden_size'] * 2, out_features)
+        # self.dense = nn.Linear(rnn_cfg['hidden_size'] * 2, out_features)
         self.sigmoid = nn.Sigmoid()
 
         self.attention = attention
@@ -63,6 +64,7 @@ class HuCRNN(nn.Module):
         x = self.dropout(x)
 
         strong_digit = self.fc2(x)
+        # strong_digit = self.dense(x)
         strong = self.sigmoid(strong_digit)
 
         if self.attention:

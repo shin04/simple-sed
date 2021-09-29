@@ -80,6 +80,10 @@ def calc_sed_eval_metrics(
 
     evaluated_files = meta_df["filename"].unique()
     classes = list(class_map.keys())
+    # classes = []
+    # classes.extend(grand_truth.event_label.dropna().unique())
+    # classes.extend(prediction.event_label.dropna().unique())
+    # classes = list(set(classes))
 
     segment_based_metrics = SegmentBasedMetrics(
         event_label_list=classes,
@@ -88,7 +92,9 @@ def calc_sed_eval_metrics(
 
     event_based_metrics = EventBasedMetrics(
         event_label_list=classes,
-        t_collar=t_collar
+        t_collar=t_collar,
+        percentage_of_length=0.2,
+        empty_system_output_handling="zero_score",
     )
 
     # for filename in grand_truth.unique_files:
@@ -108,6 +114,8 @@ def calc_sed_eval_metrics(
 
     segment_res = segment_based_metrics.results()
     event_res = event_based_metrics.results()
+
+    print(event_res['class_wise'])
 
     if is_training:
         return {
@@ -165,6 +173,8 @@ def calc_psds_eval_metrics(
         for i, k in enumerate(predictions.keys()):
             pred_df = pd.DataFrame(predictions[k])
             det = pred_df
+            det["index"] = range(1, len(det) + 1)
+            det = det.set_index("index")
             psds_eval.add_operating_point(
                 det, info={"name": f"Op {i + 1:02d}", "threshold": k}
             )

@@ -50,10 +50,10 @@ def test_process(
         '===============\n'
         '[test EVAL]\n'
         f'weak_f1:{test_weak_f1: .4f}\n',
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
-        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
+        # f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
+        # f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
+        # f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
+        # f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
     )
 
     for i in range(psds_params['val_num']):
@@ -74,6 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('model_path')
     parser.add_argument('feat_path')
     parser.add_argument('-g', '--gpu', action='store_true')
+    parser.add_argument('-a', '--all', action='store_true')
     parser.add_argument('-s', '--save_path')
     args = parser.parse_args()
 
@@ -93,13 +94,15 @@ if __name__ == '__main__':
         cfg = yaml.load(f)
 
     if args.gpu:
+        print('using gpu')
         device = torch.device('cuda')
     else:
+        print('using cpu')
         device = torch.device('cpu')
 
     if args.model == 'crnn':
         dataset = StrongDataset(
-            feat_path=feat_path/'test',
+            audio_path=feat_path/'test',
             metadata_path=test_meta,
             weak_label_path=test_weak_label,
             sr=cfg['dataset']['sr'],
@@ -117,8 +120,15 @@ if __name__ == '__main__':
 
         test_fn = normal_test_fn
     elif args.model == 'hucrnn':
+        if args.all:
+            feat_pathes = [feat_path/f'base-layer-{i+1}/test' for i in range(12)]
+            n_feats = 12
+        else:
+            feat_pathes = [feat_path/'test']
+            n_feats = 1
+
         dataset = HuBERTDataset(
-            feat_pathes=[feat_path/'test'],
+            feat_pathes=feat_pathes,
             metadata_path=test_meta,
             weak_label_path=test_weak_label,
             sr=cfg['dataset']['sr'],
@@ -132,8 +142,8 @@ if __name__ == '__main__':
             cnn_cfg=dict(cfg['model']['cnn']),
             rnn_cfg=dict(cfg['model']['rnn']),
             attention=True,
-            n_feats=1
-        )
+            n_feats=n_feats
+        ).to(device)
 
         test_fn = hubert_test_fn
     else:
