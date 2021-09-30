@@ -126,6 +126,10 @@ def run(cfg: DictConfig) -> None:
         model.parameters(), lr=lr,
         weight_decay=cfg['training']['weight_decay'], amsgrad=False
     )
+    if cfg['training']['scheduler'] == True:
+        scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
+    else:
+        scheduler = None
     criterion = nn.BCELoss()
 
     """training and validation"""
@@ -138,8 +142,8 @@ def run(cfg: DictConfig) -> None:
         for epoch in range(n_epoch):
             start = time.time()
 
-            train_strong_loss, train_weak_loss, train_tot_loss = train(
-                global_step, model, train_dataloader, device, optimizer, criterion
+            train_strong_loss, train_weak_loss, train_tot_loss, used_lr = train(
+                global_step, model, train_dataloader, device, optimizer, criterion, scheduler
             )
 
             (
@@ -172,7 +176,7 @@ def run(cfg: DictConfig) -> None:
                               valid_sed_evals['event']['overall_f1'], step=epoch)
 
             log.info(
-                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) ')
+                f'[EPOCH {epoch}/{n_epoch}]({time.time()-start: .1f}sec) lr={used_lr}')
             log.info(
                 f'[TRAIN] train loss(strong):{train_strong_loss: .4f}, ' +
                 f'train loss(weak):{train_weak_loss: .4f}, ' +

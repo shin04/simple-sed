@@ -22,6 +22,7 @@ def train(
     device: torch.device,
     optimizer: torch.optim.Optimizer,
     criterion: nn.Module,
+    scheduler: torch.optim.lr_scheduler._LRScheduler
 ):
     model.train()
 
@@ -60,7 +61,13 @@ def train(
     train_weak_loss = train_weak_loss_sum / n_batch
     train_tot_loss = train_tot_loss_sum / n_batch
 
-    return train_strong_loss, train_weak_loss, train_tot_loss
+    if scheduler is not None:
+        used_lr = scheduler.get_lr()
+        scheduler.step()
+    else:
+        used_lr = optimizer.param_groups[0]['lr']
+
+    return train_strong_loss, train_weak_loss, train_tot_loss, used_lr
 
 
 def valid(
