@@ -119,7 +119,8 @@ def run(cfg: DictConfig) -> None:
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
-        attention=True
+        attention=True,
+        layer_init=cfg['model']['initialize']
     ).to(device)
     early_stopping = EarlyStopping(patience=es_patience)
     optimizer = optim.Adam(

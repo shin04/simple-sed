@@ -16,6 +16,7 @@ class CRNN(nn.Module):
         dropout_rate: float = 0.5,
         out_features: int = 10,
         attention: bool = True,
+        layer_init: str = 'default'
     ) -> None:
         super(CRNN, self).__init__()
 
@@ -31,6 +32,8 @@ class CRNN(nn.Module):
             self.att_dense = nn.Linear(
                 rnn_cfg['hidden_size'] * 2, out_features)
             self.att_softmax = nn.Softmax(dim=-1)
+
+        self.init_params(layer_init)
 
     def forward(self, input):
         """
@@ -61,6 +64,48 @@ class CRNN(nn.Module):
             weak = strong.mean(1)
 
         return strong.transpose(1, 2), weak
+
+    def init_params(self, initialization: str = 'default'):
+        """
+        reference: ConformerSED
+
+        Parameter:
+        ----------
+        initialization: str
+            default: using pytorch default initialization,
+            xavier_uniform: ,
+            xavier_normal: ,
+            kaiming_uniform: ,
+            kaiming_normal: ,
+        """
+
+        if initialization.lower() == "default":
+            return
+
+        # weight init
+        for p in self.parameters():
+            if p.dim() > 1:
+                if initialization.lower() == "xavier_uniform":
+                    torch.nn.init.xavier_uniform_(p.data)
+                elif initialization.lower() == "xavier_normal":
+                    torch.nn.init.xavier_normal_(p.data)
+                elif initialization.lower() == "kaiming_uniform":
+                    torch.nn.init.kaiming_uniform_(p.data, nonlinearity="relu")
+                elif initialization.lower() == "kaiming_normal":
+                    torch.nn.init.kaiming_normal_(p.data, nonlinearity="relu")
+                else:
+                    raise ValueError(
+                        f"Unknown initialization: {initialization}")
+
+        # bias init
+        for p in self.parameters():
+            if p.dim() == 1:
+                p.data.zero_()
+
+        # reset some modules with default init
+        # for m in self.modules():
+        #     if isinstance(m, (torch.nn.Embedding, LayerNorm)):
+        #         m.reset_parameters()
 
 
 if __name__ == '__main__':
