@@ -46,23 +46,23 @@ def test_process(
         sr, 1, net_pooling_rate, {}
     )
 
-    print(
-        '===============\n'
-        '[test EVAL]\n'
-        f'weak_f1:{test_weak_f1: .4f}\n',
-        # f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
-        # f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
-        # f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
-        # f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
-    )
+    # print(
+    #     '===============\n'
+    #     '[test EVAL]\n'
+    #     f'weak_f1:{test_weak_f1: .4f}\n',
+    #     f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
+    #     f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
+    #     f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
+    #     f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
+    # )
 
-    for i in range(psds_params['val_num']):
-        score = test_psds_eval_list[i]
-        f1 = test_psds_macro_f1_list[i]
-        print(
-            f'psds score ({i}):{score: .4f}, '
-            f'macro f1 ({i}):{f1: .4f}'
-        )
+    # for i in range(psds_params['val_num']):
+    #     score = test_psds_eval_list[i]
+    #     f1 = test_psds_macro_f1_list[i]
+    #     print(
+    #         f'psds score ({i}):{score: .4f}, '
+    #         f'macro f1 ({i}):{f1: .4f}'
+    #     )
 
     if save_path is not None:
         np.save(save_path, test_pred_dict)
@@ -121,7 +121,8 @@ if __name__ == '__main__':
         test_fn = normal_test_fn
     elif args.model == 'hucrnn':
         if args.all:
-            feat_pathes = [feat_path/f'base-layer-{i+1}/test' for i in range(12)]
+            feat_pathes = [feat_path /
+                           f'base-layer-{i+1}/test' for i in range(12)]
             n_feats = 12
         else:
             feat_pathes = [feat_path/'test']

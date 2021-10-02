@@ -2,10 +2,10 @@ from pathlib import Path
 import argparse
 
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import librosa
-import soundfile as sf
+
+from analyze.load_data import load_predict, load_audio, load_weak_label
 
 
 def sed_res_visualize(
@@ -18,29 +18,19 @@ def sed_res_visualize(
     hop_length: int = 1024,
     pooling_rate: int = 1
 ) -> None:
-
-    if not pred_path.exists():
-        raise RuntimeError(f'{pred_path} is not found')
-
-    if not audio_path.exists():
-        raise RuntimeError(f'{audio_path} is not found')
-
-    if not weak_path.exists():
-        raise RuntimeError(f'{weak_path} is not found')
-
     if not out_path.exists():
         out_path.mkdir(parents=True)
 
-    weak_meta_df = pd.read_csv(weak_path)
+    weak_meta_df = load_weak_label(weak_path)
     labels = sorted(weak_meta_df.columns[1:].tolist())
 
-    pred_dict = np.load(pred_path, allow_pickle=True).item()
+    pred_dict = load_predict(pred_path)
     k = list(pred_dict.keys())[0]
     v = pred_dict[k].T  # (n_frames, events)
     sorted_indexes = np.argsort(np.max(v, axis=0))[::-1]
     top_result_mat = v[:, sorted_indexes[0:]]
 
-    waveform, sr = sf.read(audio_path / k)
+    waveform, sr = load_audio(audio_path / k)
     _hop_length = hop_length * pooling_rate
     frames_per_second = sr // (_hop_length)
 
