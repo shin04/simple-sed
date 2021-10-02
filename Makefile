@@ -7,6 +7,9 @@ export $(shell sed 's/=.*//' .env)
 build:
 	docker build -t $(IMAGE_NAME) .
 
+build-cuml:
+	docker build -t sed-cuml -f Dockerfile.cuml .
+
 run:
 	docker run -it \
 		--env HDF5_USE_FILE_LOCKING='FALSE' \
@@ -22,3 +25,13 @@ run:
 
 attach:
 	docker exec -it $(CONTAINER_NAME) /bin/bash
+
+feature_visualize:
+	docker run -it \
+		--shm-size=16g \
+		--mount type=bind,source=$(HOME_DIR)/work/sed/src/analyze,target=/work/analyze \
+		--mount type=bind,source=$(HOME_DIR)$(FEAT_PATH),target=/work/dataset/feat \
+		--mount type=bind,source=$(HOME_DIR)$(VISUALIZE_RESULT_PATH),target=/work/visualize_result \
+		--name sed-feature-visualize \
+		--gpus all \
+		sed-cuml /bin/bash
