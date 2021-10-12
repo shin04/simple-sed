@@ -122,7 +122,7 @@ if __name__ == '__main__':
     elif args.model == 'hucrnn':
         if args.all:
             feat_pathes = [feat_path /
-                           f'base-layer-{i+1}/test' for i in range(12)]
+                           f'pretrain-base-ite2-21-layer-{i+1}/test' for i in range(12)]
             n_feats = 12
         else:
             feat_pathes = [feat_path/'test']

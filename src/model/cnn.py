@@ -29,8 +29,8 @@ class ConvBlock(nn.Module):
         x = self.conv(x)
         x = self.norm(x)
         x = self.act(x)
-        x = self.pool(x)
         x = self.dropout(x)
+        x = self.pool(x)
 
         return x
 

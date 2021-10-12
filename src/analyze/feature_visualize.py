@@ -120,10 +120,12 @@ def visualize(visualize_data: dict, classes: list, out_path: Path):
 
     # visualise
     plt.figure(figsize=(20, 20))
-    for i, label in enumerate(classes):
+    for i, label in enumerate(reversed(classes)):
         data = visualize_data[label]
         plt.scatter(data['x'], data['y'], label=label)
-    plt.legend(fontsize=30)
+    plt.legend(fontsize=20)
+    plt.xticks(fontsize=20)
+    plt.yticks(fontsize=20)
     plt.savefig(out_path/'image-all.png')
     plt.clf()
 
@@ -132,7 +134,9 @@ def visualize(visualize_data: dict, classes: list, out_path: Path):
         data = visualize_data[label]
         plt.scatter(data['x'], data['y'], label=label)
         plt.title(label)
-        plt.legend(fontsize=30)
+        plt.legend(fontsize=10)
+        plt.xticks(fontsize=10)
+        plt.yticks(fontsize=10)
         plt.savefig(out_path/f'image-{classes[i]}.png')
         plt.clf()
 

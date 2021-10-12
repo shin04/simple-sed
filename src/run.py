@@ -82,7 +82,7 @@ def run(cfg: DictConfig) -> None:
     transforms = T.Compose([get_melspec])
 
     train_dataset = StrongDataset(
-        audio_path=audio_path / 'train',
+        audio_path=audio_path / 'train-16k',
         metadata_path=train_meta,
         weak_label_path=train_weak_label,
         sr=sr,
@@ -97,7 +97,7 @@ def run(cfg: DictConfig) -> None:
     )
 
     valid_dataset = StrongDataset(
-        audio_path=audio_path / 'validate',
+        audio_path=audio_path / 'validate-16k',
         metadata_path=valid_meta,
         weak_label_path=valid_weak_label,
         sr=sr,
@@ -124,10 +124,14 @@ def run(cfg: DictConfig) -> None:
     ).to(device)
     early_stopping = EarlyStopping(patience=es_patience)
     optimizer = optim.Adam(
-        model.parameters(), lr=lr,
-        weight_decay=cfg['training']['weight_decay'], amsgrad=False
+        model.parameters(),
+        lr=lr,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        weight_decay=cfg['training']['weight_decay'],
+        amsgrad=False
     )
-    if cfg['training']['scheduler'] == True:
+    if cfg['training']['scheduler']:
         scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
     else:
         scheduler = None
@@ -223,7 +227,7 @@ def run(cfg: DictConfig) -> None:
         """test step"""
         log.info("start evaluate ...")
         test_dataset = StrongDataset(
-            audio_path=audio_path / 'test',
+            audio_path=audio_path / 'test-16k',
             metadata_path=test_meta,
             weak_label_path=test_weak_label,
             sr=sr,
