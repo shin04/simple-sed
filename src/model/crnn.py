@@ -40,7 +40,7 @@ class CRNN(nn.Module):
         input: waveform (batch_size, channels, freq, frames)
         """
 
-        # (batch_size, channels, freq, frames) -> (batch_size, channels, frames, freq)
+        # (batch_size, freq, frames) -> (batch_size, channels, frames, freq)
         x = input.transpose(1, 2).unsqueeze(1)
 
         x = self.cnn(x)
