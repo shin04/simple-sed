@@ -19,7 +19,12 @@ from model.crnn import CRNN
 from dataset.urban_sed import StrongDataset
 from training.train import train, valid
 from training.test import test  # , decide_class_threshold
-from utils.transformers import GetMelSpectrogram
+from utils.transformers import (
+    GetMelSpectrogram,
+    TimeMasking,
+    FrequencyMasking,
+    # Normalize
+)
 from utils.callback import EarlyStopping
 from utils.param_util import log_params_from_omegaconf_dict
 
@@ -65,13 +70,8 @@ def run(cfg: DictConfig) -> None:
     batch_size = cfg['training']['batch_size']
     lr = cfg['training']['lr']
     num_workers = cfg['training']['num_workers']
-    if num_workers == 0:
-        pin_memory = False
-    elif num_workers == -1:
-        num_workers = os.cpu_count()
-        pin_memory = True
-    else:
-        pin_memory = True
+    pin_memory = cfg['training']['pin_memory']
+
     es_patience = cfg['training']['early_stop_patience']
     thresholds = cfg['training']['thresholds']
 
@@ -79,7 +79,17 @@ def run(cfg: DictConfig) -> None:
 
     """prepare datasets"""
     get_melspec = GetMelSpectrogram(sr=sr, **cfg['feature'], log_scale=True)
-    transforms = T.Compose([get_melspec])
+    time_mask = TimeMasking(**cfg['augmentation']['time_masking'])
+    freq_mask = FrequencyMasking(**cfg['augmentation']['freq_masking'])
+    # normalzie = Normalize(mode='min_max')
+    transforms = T.Compose([
+        get_melspec,
+        T.RandomApply([
+            time_mask,
+            freq_mask
+        ], p=0.5),
+        # normalzie
+    ])
 
     train_dataset = StrongDataset(
         audio_path=audio_path / 'train-16k',

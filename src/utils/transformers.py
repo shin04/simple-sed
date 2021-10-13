@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from torchaudio.transforms import MelSpectrogram, AmplitudeToDB
+import torchaudio.transforms as T
 
 
 class GaussianNoise:
@@ -34,7 +34,7 @@ class GetMelSpectrogram:
         f_max: int,
         log_scale: bool
     ) -> None:
-        self.mel_spec_trans = MelSpectrogram(
+        self.mel_spec_trans = T.MelSpectrogram(
             sample_rate=sr,
             n_fft=n_filters,
             win_length=n_window,
@@ -46,7 +46,7 @@ class GetMelSpectrogram:
 
         self.log_scale = log_scale
 
-        self.amp_to_db = AmplitudeToDB(stype='power')
+        self.amp_to_db = T.AmplitudeToDB(stype='power')
         self.amp_to_db.amin = 1e-5
 
     def __call__(self, y: torch.Tensor) -> torch.Tensor:
@@ -58,3 +58,60 @@ class GetMelSpectrogram:
             mel_spec = self.amp_to_db(mel_spec)
 
         return mel_spec
+
+
+class TimeStretch:
+    def __init__(self, rate: float) -> None:
+        self.rate = rate
+        self.strecher = T.TimeStretch()
+
+    def __call__(self, y: torch.Tensor) -> torch.Tensor:
+        streched = self.strecher(y, self.rate)
+
+        return streched
+
+
+class TimeMasking:
+    def __init__(self, time_mask_param: int, mask_num: int) -> None:
+        self.masker = T.TimeMasking(time_mask_param)
+        self.mask_num = mask_num
+
+    def __call__(self, y: torch.Tensor) -> torch.Tensor:
+        masked = y
+        for _ in range(self.mask_num):
+            masked = self.masker(masked)
+
+        return masked
+
+
+class FrequencyMasking:
+    def __init__(self, freq_mask_param: int, mask_num: int) -> None:
+        self.masker = T.FrequencyMasking(freq_mask_param)
+        self.mask_num = mask_num
+
+    def __call__(self, y: torch.Tensor) -> torch.Tensor:
+        masked = y
+        for _ in range(self.mask_num):
+            masked = self.masker(masked)
+
+        return masked
+
+
+class Normalize:
+    def __init__(self, mean=None, std=None, mode="gcmvn"):
+        self.mean = mean
+        self.std = std
+        self.mode = mode
+        self.ref_level_db = 20
+        self.min_level_db = -80
+
+    def __call__(self, data):
+        if self.mode == "gcmvn":
+            return (data - self.mean) / self.std
+        elif self.mode == "cmvn":
+            return (data - data.mean(axis=0)) / data.std(axis=0)
+        elif self.mode == "cmn":
+            return data - data.mean(axis=0)
+        elif self.mode == "min_max":
+            data -= self.ref_level_db
+            return np.clip((data - self.min_level_db) / -self.min_level_db, 0, 1)
