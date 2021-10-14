@@ -28,7 +28,9 @@ training:
   batch_size: 8
   lr: 0.001
   scheduler: false
+  weight_decay: 0.000001
   num_workers: 8
+  pin_memory: false
   early_stop_patience: 10
   thresholds: [0.5]
   sed_eval_thr: 0.5
