@@ -128,7 +128,7 @@ def run(cfg: DictConfig) -> None:
     ).to(device)
     early_stopping = EarlyStopping(patience=es_patience)
     optimizer = optim.Adam(model.parameters(), lr=lr, amsgrad=False)
-    if cfg['training']['scheduler'] == True:
+    if cfg['training']['scheduler']:
         scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.95)
     else:
         scheduler = None
@@ -136,7 +136,6 @@ def run(cfg: DictConfig) -> None:
 
     """training and validation"""
     best_loss = 10000
-    global_step = 0
     mlflow.set_tracking_uri(tracking_url)
     mlflow.set_experiment(ex_name)
     with mlflow.start_run(run_name=str(ts)):
@@ -145,7 +144,7 @@ def run(cfg: DictConfig) -> None:
             start = time.time()
 
             train_strong_loss, train_weak_loss, train_tot_loss, used_lr = train(
-                global_step, model, train_dataloader, device, optimizer, criterion, scheduler
+                model, train_dataloader, device, optimizer, criterion, scheduler
             )
 
             (
@@ -216,8 +215,6 @@ def run(cfg: DictConfig) -> None:
                 log.info('Early Stopping')
                 break
 
-            global_step += len(train_dataset)
-
         """test step"""
         log.info("start evaluate ...")
 
@@ -261,7 +258,27 @@ def run(cfg: DictConfig) -> None:
                 f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}')
 
         if is_save:
-            np.save(result_path / f'{ex_name}-{ts}-test.npy', test_pred_dict)
+            p = result_path / f'{ex_name}-{ts}-test.npy'
+            np.save(p, test_pred_dict)
+            log.info(f'saved predict at {p}')
+
+        if not cfg['model']['save']:
+            try:
+                model_path.unlink()
+                log.info(f'deleted model at {model_path}')
+            except Exception as e:
+                log.info(f'failed deleting model at {model_path}')
+                log.error(e)
+
+        mlflow.log_metric('test/weak/f1', test_weak_f1, step=epoch)
+        mlflow.log_metric('test/sed_eval/segment/class_wise_f1',
+                          test_sed_evals['segment']['class_wise_f1'], step=epoch)
+        mlflow.log_metric('test/sed_eval/segment/overall_f1',
+                          test_sed_evals['segment']['overall_f1'], step=epoch)
+        mlflow.log_metric('test/sed_eval/event/class_wise_f1',
+                          test_sed_evals['event']['class_wise_f1'], step=epoch)
+        mlflow.log_metric('test/sed_eval/event/overall_f1',
+                          test_sed_evals['event']['overall_f1'], step=epoch)
 
         mlflow.log_artifact('.hydra/config.yaml')
         mlflow.log_artifact('.hydra/hydra.yaml')

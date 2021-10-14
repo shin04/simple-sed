@@ -6,7 +6,6 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import mlflow
 
 from utils.label_encoder import strong_label_decoding
 from .metrics import (
@@ -16,7 +15,6 @@ from .metrics import (
 
 
 def train(
-    global_step: int,
     model: nn.Module,
     dataloader: DataLoader,
     device: torch.device,
@@ -50,13 +48,6 @@ def train(
         train_strong_loss_sum += strong_loss.item()
         train_weak_loss_sum += weak_loss.item()
         train_tot_loss_sum += tot_loss.item()
-
-        mlflow.log_metric('step_train/strong/loss',
-                          strong_loss.item(), step=global_step+i+1)
-        mlflow.log_metric('step_train/weak/loss',
-                          weak_loss.item(), step=global_step+i+1)
-        mlflow.log_metric('step_train/tot/loss',
-                          tot_loss.item(), step=global_step+i+1)
 
     train_strong_loss = train_strong_loss_sum / n_batch
     train_weak_loss = train_weak_loss_sum / n_batch
