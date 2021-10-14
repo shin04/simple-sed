@@ -36,6 +36,7 @@ training:
   sed_eval_thr: 0.5
 
 model:
+  save: false
   save_path: "models"
   cnn:
     num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
