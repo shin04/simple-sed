@@ -114,7 +114,7 @@ def run(cfg: DictConfig) -> None:
         frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
-        transforms=transforms
+        transforms=T.Compose([get_melspec])
     )
     valid_dataloader = DataLoader(
         valid_dataset, batch_size=batch_size, shuffle=False,
@@ -149,7 +149,6 @@ def run(cfg: DictConfig) -> None:
 
     """training and validation"""
     best_loss = 10000
-    global_step = 0
     mlflow.set_tracking_uri(tracking_url)
     mlflow.set_experiment(ex_name)
     with mlflow.start_run(run_name=str(ts)):
@@ -158,7 +157,7 @@ def run(cfg: DictConfig) -> None:
             start = time.time()
 
             train_strong_loss, train_weak_loss, train_tot_loss, used_lr = train(
-                global_step, model, train_dataloader, device, optimizer, criterion, scheduler
+                model, train_dataloader, device, optimizer, criterion, scheduler
             )
 
             (
@@ -227,12 +226,13 @@ def run(cfg: DictConfig) -> None:
                     torch.save(model.state_dict(), f)
                 log.info(f'update best model (loss: {best_loss})')
 
+            log.info(f'best loss: {best_loss}')
+            mlflow.log_metric('valid/best_loss', best_loss, step=epoch)
+
             early_stopping(valid_tot_loss)
             if early_stopping.early_stop:
                 log.info('Early Stopping')
                 break
-
-            global_step += len(train_dataset)
 
         """test step"""
         log.info("start evaluate ...")
@@ -244,7 +244,7 @@ def run(cfg: DictConfig) -> None:
             frame_hop=hop_length,
             sample_sec=sample_sec,
             net_pooling_rate=net_pooling_rate,
-            transforms=transforms
+            transforms=T.Compose([get_melspec])
         )
         test_dataloader = DataLoader(
             test_dataset, batch_size=batch_size, shuffle=False,
@@ -308,6 +308,16 @@ def run(cfg: DictConfig) -> None:
             except Exception as e:
                 log.info(f'failed deleting model at {model_path}')
                 log.error(e)
+
+        mlflow.log_metric('test/weak/f1', test_weak_f1, step=epoch)
+        mlflow.log_metric('test/sed_eval/segment/class_wise_f1',
+                          test_sed_evals['segment']['class_wise_f1'], step=epoch)
+        mlflow.log_metric('test/sed_eval/segment/overall_f1',
+                          test_sed_evals['segment']['overall_f1'], step=epoch)
+        mlflow.log_metric('test/sed_eval/event/class_wise_f1',
+                          test_sed_evals['event']['class_wise_f1'], step=epoch)
+        mlflow.log_metric('test/sed_eval/event/overall_f1',
+                          test_sed_evals['event']['overall_f1'], step=epoch)
 
         mlflow.log_artifact('.hydra/config.yaml')
         mlflow.log_artifact('.hydra/hydra.yaml')
