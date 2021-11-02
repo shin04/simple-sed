@@ -99,6 +99,8 @@ def run(cfg: DictConfig) -> None:
         sample_sec=sample_sec,
         frame_hop=hop_length,
         net_pooling_rate=net_pooling_rate,
+        hubert_feat_path=Path(
+            '/ml/dataset/feat/mfcc/pretrain-base-ite2-layer-12/train'),
         transforms=transforms
     )
     train_dataloader = DataLoader(
@@ -114,6 +116,8 @@ def run(cfg: DictConfig) -> None:
         frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
+        hubert_feat_path=Path(
+            '/ml/dataset/feat/mfcc/pretrain-base-ite2-layer-12/valid'),
         transforms=T.Compose([get_melspec])
     )
     valid_dataloader = DataLoader(
