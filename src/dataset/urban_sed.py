@@ -18,6 +18,7 @@ class StrongDataset(Dataset):
         sample_sec: int = 10,
         frame_hop: int = 256,
         net_pooling_rate: int = 1,
+        hubert_feat_path: Path = None,
         transforms: T.Compose = None,
     ) -> None:
         self.audio_path = audio_path
@@ -40,6 +41,11 @@ class StrongDataset(Dataset):
 
         self.transforms = transforms
 
+        self.hubert_feat_path = hubert_feat_path
+        if hubert_feat_path is not None:
+            _feat = np.load(hubert_feat_path / f'{self.filenames[0][:-4]}.npy')
+            self.feat_shape = _feat.shape
+
     def __len__(self):
         return len(self.filenames)
 
@@ -60,10 +66,17 @@ class StrongDataset(Dataset):
         if self.transforms is not None:
             waveform = self.transforms(waveform)
 
+        if self.hubert_feat_path is not None:
+            feat = self.get_hubert_feat()
+            feat = feat.T
+            waveform = waveform[:, :499]
+            waveform = np.concatenate([waveform, feat])
+
         label = strong_label_encoding(
             self.sr, self.sample_len, self.frame_hop, self.net_pooling_rate,
             self.meta_df[self.meta_df['filename'] == filename], self.class_map
         )
+        label = label[:499, ]
 
         item = {
             'filename': filename,
@@ -74,6 +87,12 @@ class StrongDataset(Dataset):
 
         return item
 
+    def get_hubert_feat(self):
+        feat = np.zeros(self.feat_shape)
+        feat = torch.from_numpy(feat).float()
+
+        return feat
+
 
 if __name__ == '__main__':
     dataset = StrongDataset(
@@ -83,10 +102,10 @@ if __name__ == '__main__':
             '/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
         weak_label_path=Path(
             '/home/kajiwara21/work/sed/meta/train_meta_weak.csv'),
-        sr=44100,
+        sr=16000,
         sample_sec=10,
-        frame_hop=1024,
-        net_pooling_rate=1
+        frame_hop=320,
+        net_pooling_rate=1,
     )
 
     print(len(dataset))

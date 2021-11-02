@@ -47,14 +47,18 @@ class HuCRNN(nn.Module):
                 HuBERT feature (batch_size, frame, 768)
         """
 
+        print("input", input.shape)
         if self.n_feats == 1:
             x = input.squeeze(-1)
             x = x.unsqueeze(1)
         else:
             x = self.fc1(input)
             x = x.permute(0, 3, 1, 2)
+        print("preprocess", x.shape)
 
         x = self.cnn(x)
+
+        print("output cnn", x.shape)
 
         # (batch_size, channels, frames, freq) > (batch_size, frames, channels)
         x = x.squeeze(-1)

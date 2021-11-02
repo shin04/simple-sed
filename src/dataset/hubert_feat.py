@@ -83,12 +83,11 @@ class HuBERTDataset(Dataset):
 
 
 if __name__ == '__main__':
+    feat_path = '''
+        /home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed_audioset/mfcc/pretrain-base-ite2-layer-12/test
+    '''
     dataset = HuBERTDataset(
-        feat_pathes=[
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed_audioset/pretrain-base-ite2-23-layer-12/test'
-            ),
-        ],
+        feat_pathes=[Path(feat_path)],
         metadata_path=Path(
             '/home/kajiwara21/work/sed/meta/test_meta_strong.csv'),
         weak_label_path=Path(
