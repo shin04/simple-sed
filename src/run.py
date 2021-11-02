@@ -99,7 +99,7 @@ def run(cfg: DictConfig) -> None:
         sample_sec=sample_sec,
         frame_hop=hop_length,
         net_pooling_rate=net_pooling_rate,
-        hubert_feat_path=Path(cfg['dataset']['feat_path']/'train'),
+        hubert_feat_path=Path(cfg['dataset']['feat_path'])/'train',
         transforms=transforms
     )
     train_dataloader = DataLoader(
@@ -115,7 +115,7 @@ def run(cfg: DictConfig) -> None:
         frame_hop=hop_length,
         sample_sec=sample_sec,
         net_pooling_rate=net_pooling_rate,
-        hubert_feat_path=Path(cfg['dataset']['feat_path']/'valid'),
+        hubert_feat_path=Path(cfg['dataset']['feat_path'])/'valid',
         transforms=T.Compose([get_melspec])
     )
     valid_dataloader = DataLoader(
@@ -253,7 +253,7 @@ def run(cfg: DictConfig) -> None:
             frame_hop=hop_length,
             sample_sec=sample_sec,
             net_pooling_rate=net_pooling_rate,
-            hubert_feat_path=Path(cfg['dataset']['feat_path']/'test'),
+            hubert_feat_path=Path(cfg['dataset']['feat_path'])/'test',
             transforms=T.Compose([get_melspec])
         )
         test_dataloader = DataLoader(
