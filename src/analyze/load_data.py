@@ -7,6 +7,25 @@ import pandas as pd
 import soundfile as sf
 
 
+def load_pretrain_hubert_feature(feat_path: Path, km_path: Path) -> np.ndarray:
+    print('loading pretrained hubert feature ...')
+    if not feat_path.exists():
+        raise FileNotFoundError(f'{feat_path} is not found')
+    if not km_path.exists():
+        raise FileNotFoundError(f'{km_path} is not found')
+
+    feat = np.load(feat_path)
+    labels = []
+    with open(km_path, 'r') as km_file:
+        for row in km_file:
+            labels += row.split(' ')
+
+    if len(feat) != len(labels):
+        raise RuntimeError(f'{len(feat)} != {len(labels)}')
+
+    return feat[:len(feat)//2], labels[:len(feat)//2]
+
+
 def load_hubert_feature(feat_path: Path) -> np.ndarray:
     print('loading hubert feature ...')
     if not feat_path.exists():
