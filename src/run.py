@@ -132,7 +132,7 @@ def run(cfg: DictConfig) -> None:
         attention=True,
         layer_init=cfg['model']['initialize']
     ).to(device)
-    if device == 'cuda':
+    if cfg['device'] == 'cuda':
         model = torch.nn.DataParallel(model)
 
     early_stopping = EarlyStopping(patience=es_patience)
@@ -261,6 +261,8 @@ def run(cfg: DictConfig) -> None:
             attention=True
         ).to(device)
         model.load_state_dict(torch.load(model_path))
+        if cfg['device'] == 'cuda':
+            model = torch.nn.DataParallel(model)
 
         # best_th = decide_class_threshold(
         #     result_path / f'{ex_name}-valid.npy', valid_meta, sr, hop_length, net_pooling_rate,

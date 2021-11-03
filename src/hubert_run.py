@@ -126,7 +126,7 @@ def run(cfg: DictConfig) -> None:
         attention=True,
         n_feats=len(feat_pathes)
     ).to(device)
-    if device == 'cuda':
+    if cfg['device'] == 'cuda':
         model = torch.nn.DataParallel(model)
 
     early_stopping = EarlyStopping(patience=es_patience)
@@ -233,6 +233,8 @@ def run(cfg: DictConfig) -> None:
             n_feats=len(feat_pathes)
         ).to(device)
         model.load_state_dict(torch.load(model_path))
+        if cfg['device'] == 'cuda':
+            model = torch.nn.DataParallel(model)
 
         (
             test_psds_eval_list,
