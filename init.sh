@@ -12,7 +12,7 @@ ln -s $HOME/nas02home/dataset/hubert_feat/urbansed_audioset ./feat
 #----- generate .env.mlflow -----#
 cd $WORK_DIR
 touch .env.mlflow
-cat "TRACKING_URL=$WORK_DIR/results" > .env.mlflow
+echo "TRACKING_URL=$WORK_DIR/results" > .env.mlflow
 
 #----- venv -----#
 cd $WORK_DIR
