@@ -132,6 +132,9 @@ def run(cfg: DictConfig) -> None:
         attention=True,
         layer_init=cfg['model']['initialize']
     ).to(device)
+    if device == 'cuda':
+        model = torch.nn.DataParallel(model)
+
     early_stopping = EarlyStopping(patience=es_patience)
     optimizer = optim.Adam(
         model.parameters(),
