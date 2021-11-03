@@ -1,7 +1,7 @@
 ex_name: "sample-hubert"
 device: "cuda"
 base_dir: "/ml"
-environments: ".env.secret"
+environments: ".env.mlflow"
 
 result:
   save: false
@@ -123,6 +123,8 @@ defaults:
   - override hydra/sweeper: optuna
 
 hydra:
+  run:
+    dir: /ml/results/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}
   sweeper:
     storage: null
     # study_name: sed-baseline-lr
