@@ -126,6 +126,9 @@ def run(cfg: DictConfig) -> None:
         attention=True,
         n_feats=len(feat_pathes)
     ).to(device)
+    if device == 'cuda':
+        model = torch.nn.DataParallel(model)
+
     early_stopping = EarlyStopping(patience=es_patience)
     optimizer = optim.Adam(model.parameters(), lr=lr, amsgrad=False)
     if cfg['training']['scheduler']:
@@ -206,9 +209,13 @@ def run(cfg: DictConfig) -> None:
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
+
                 with open(model_path, 'wb') as f:
                     torch.save(model.state_dict(), f)
                 log.info(f'update best model (loss: {best_loss})')
+
+            log.info(f'best loss: {best_loss}')
+            mlflow.log_metric('valid/best_loss', best_loss, step=epoch)
 
             early_stopping(valid_tot_loss)
             if early_stopping.early_stop:
