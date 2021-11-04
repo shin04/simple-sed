@@ -1,7 +1,7 @@
 ex_name: "sample"
 device: "cuda"
 base_dir: "/ml"
-environments: ".env.secret"
+environments: ".env.mlflow"
 
 result:
   save: false
@@ -24,8 +24,8 @@ dataset:
   net_pooling_rate: 1
 
 feature:
-  n_filters: 2048
-  n_window: 2048
+  n_filters: 640
+  n_window: 640
   hop_length: 320
   f_min: 0
   f_max: 8000
@@ -141,6 +141,8 @@ defaults:
   - override hydra/sweeper: optuna
 
 hydra:
+  run:
+    dir: /ml/results/hydra/${now:%Y-%m-%d}/${now:%H-%M-%S}
   sweeper:
     storage: null
     # study_name: sed-baseline-lr

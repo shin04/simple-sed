@@ -32,7 +32,7 @@ TIME_TEMPLATE = '%Y%m%d%H%M%S'
 log = logging.getLogger(__name__)
 
 
-@hydra.main(config_path='../config', config_name='baseline.yaml')
+@hydra.main(config_path='../config', config_name='baseline+hubert.yaml')
 def run(cfg: DictConfig) -> None:
     base_dir = Path(cfg['base_dir'])
 
