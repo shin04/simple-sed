@@ -36,6 +36,9 @@ feature_visualize:
 		--gpus all \
 		sed-cuml /bin/bash
 
+attach_vis:
+	docker exec -it sed-feature-visualize /bin/bash
+
 pretrained_feature_vis:
 	docker run -it \
 		--shm-size=16g \

@@ -180,8 +180,7 @@ def run_feature_visualize(
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('feat_path')
-    parser.add_argument(
-        '--strong_path', default='/home/kajiwara21/work/sed/meta/test_meta_strong.csv')
+    parser.add_argument('--strong_path', default='meta/test_meta_strong.csv')
     parser.add_argument('--out_path', default='.')
     parser.add_argument('--sr', default=16000)
     parser.add_argument('--sample_len', default=160000)
