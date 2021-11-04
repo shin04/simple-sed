@@ -18,7 +18,7 @@ dataset:
   train_duration: "meta/train_meta_duration.csv"
   valid_duration: "meta/valid_meta_duration.csv"
   test_duration: "meta/test_meta_duration.csv"
-  feat_path: "dataset/feat/mfcc/pretrain-base-ite2-layer-12"
+  feat_path: None
   sr: 16000
   sec: 10
   net_pooling_rate: 1

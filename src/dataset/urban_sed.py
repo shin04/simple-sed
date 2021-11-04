@@ -66,7 +66,7 @@ class StrongDataset(Dataset):
         if self.transforms is not None:
             waveform = self.transforms(waveform)
 
-        # waveform = waveform[:, :499]
+        waveform = waveform[:, :499]
         if self.hubert_feat_path is not None:
             feat = self.get_hubert_feat()
             feat = feat.T
@@ -76,7 +76,7 @@ class StrongDataset(Dataset):
             self.sr, self.sample_len, self.frame_hop, self.net_pooling_rate,
             self.meta_df[self.meta_df['filename'] == filename], self.class_map
         )
-        # label = label[:499, ]
+        label = label[:499, ]
 
         item = {
             'filename': filename,
