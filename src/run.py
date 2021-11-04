@@ -226,7 +226,11 @@ def run(cfg: DictConfig) -> None:
                     )
 
                 with open(model_path, 'wb') as f:
-                    torch.save(model.state_dict(), f)
+                    if cfg['device'] == 'cuda':
+                        torch.save(model.module.state_dict(), f)
+                    else:
+                        torch.save(model.state_dict(), f)
+
                 log.info(f'update best model (loss: {best_loss})')
 
             log.info(f'best loss: {best_loss}')
