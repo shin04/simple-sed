@@ -64,11 +64,15 @@ class StrongDataset(Dataset):
             self.sr, self.sample_len, self.frame_hop, self.net_pooling_rate,
             self.meta_df[self.meta_df['filename'] == filename], self.class_map
         )
+        label = torch.from_numpy(label.T).float()
+
+        if waveform.size()[1] != label.size()[1]:
+            waveform = waveform[:, :label.size()[1]]
 
         item = {
             'filename': filename,
             'waveform': waveform,
-            'target': torch.from_numpy(label.T).float(),
+            'target': label,
             'weak_label': torch.from_numpy(self.weak_labels[idx]).float()
         }
 

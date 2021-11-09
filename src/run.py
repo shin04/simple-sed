@@ -212,10 +212,13 @@ def run(cfg: DictConfig) -> None:
                 f'[VALID F1(event)] event/class_wise_f1:{valid_sed_evals["event"]["class_wise_f1"]: .4f} ' +
                 f'event/overall_f1:{valid_sed_evals["event"]["overall_f1"]: .4f}'
             )
-            if len(valid_sed_evals['event']['detail']) != 0:
+            if len(valid_sed_evals['event']['by_event']) != 0:
                 for event in list(valid_dataset.class_map.keys()):
                     log.info(
-                        f'{event} : {valid_sed_evals["event"]["detail"][event]: .4f}')
+                        f'{event}: ' +
+                        f'segment based f1 {valid_sed_evals["segment"]["by_event"][event]["f_measure"]: .4f}, ' +
+                        f'event based f1 {valid_sed_evals["event"]["by_event"][event]["f_measure"]: .4f}'
+                    )
 
             if best_loss > valid_tot_loss:
                 best_loss = valid_tot_loss
@@ -298,6 +301,13 @@ def run(cfg: DictConfig) -> None:
             f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f} ' +
             f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
         )
+        if len(test_sed_evals['event']['by_event']) != 0:
+            for event in list(test_dataset.class_map.keys()):
+                log.info(
+                    f'{event}: ' +
+                    f'segment based f1 {test_sed_evals["segment"]["by_event"][event]["f_measure"]: .4f}, ' +
+                    f'event based f1 {test_sed_evals["event"]["by_event"][event]["f_measure"]: .4f}'
+                )
 
         for i in range(cfg['evaluate']['psds']['val_num']):
             score = test_psds_eval_list[i]

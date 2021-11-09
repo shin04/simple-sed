@@ -1,7 +1,10 @@
+import os
 import yaml
 from pathlib import Path
 from typing import List, Callable
 import argparse
+from collections import OrderedDict
+import logging
 
 import numpy as np
 import torch
@@ -14,6 +17,21 @@ from model.crnn import CRNN
 from model.hucrnn import HuCRNN
 from dataset.urban_sed import StrongDataset
 from dataset.hubert_feat import HuBERTDataset
+
+logging.basicConfig(
+    level=os.environ.get("LOGLEVEL", "INFO").upper(),
+)
+log = logging.getLogger(__name__)
+
+
+def fix_model_state_dict(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k
+        if name.startswith('module.'):
+            name = name[7:]  # remove 'module.' of dataparallel
+        new_state_dict[name] = v
+    return new_state_dict
 
 
 def test_process(
@@ -32,7 +50,8 @@ def test_process(
     net_pooling_rate: int,
     save_path: Path
 ):
-    model.load_state_dict(torch.load(model_path))
+    state_dict = torch.load(model_path)
+    model.load_state_dict(fix_model_state_dict(state_dict))
 
     (
         test_psds_eval_list,
@@ -46,22 +65,29 @@ def test_process(
         sr, 1, net_pooling_rate, {}
     )
 
-    print(
-        '===============\n'
-        '[test EVAL]\n'
-        f'weak_f1:{test_weak_f1: .4f}\n',
-        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f}\n',
-        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}\n',
-        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f}\n',
-        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}\n',
+    log.info('[TEST EVAL]')
+    log.info(f'weak_f1:{test_weak_f1: .4f}')
+    log.info(
+        f'segment/class_wise_f1:{test_sed_evals["segment"]["class_wise_f1"]: .4f} ' +
+        f'segment/overall_f1:{test_sed_evals["segment"]["overall_f1"]: .4f}'
     )
+    log.info(
+        f'event/class_wise_f1:{test_sed_evals["event"]["class_wise_f1"]: .4f} ' +
+        f'event/overall_f1:{test_sed_evals["event"]["overall_f1"]: .4f}'
+    )
+    if len(test_sed_evals['event']['by_event']) != 0:
+        for event in list(dataset.class_map.keys()):
+            log.info(f'{event}: ')
+            log.info(
+                f'segment based f1: {test_sed_evals["segment"]["by_event"][event]["f_measure"]: .4f}, ' +
+                f'event based f1: {test_sed_evals["event"]["by_event"][event]["f_measure"]: .4f}'
+            )
 
     for i in range(psds_params['val_num']):
         score = test_psds_eval_list[i]
         f1 = test_psds_macro_f1_list[i]
-        print(
-            f'psds score ({i}):{score: .4f}, '
-            f'macro f1 ({i}):{f1: .4f}'
+        log.info(
+            f'psds score ({i}):{score: .4f}, macro f1 ({i}):{f1: .4f}'
         )
 
     if save_path is not None:
@@ -122,7 +148,7 @@ if __name__ == '__main__':
     elif args.model == 'hucrnn':
         if args.all:
             feat_pathes = [feat_path /
-                           f'pretrain-base-ite2-21-layer-{i+1}/test' for i in range(12)]
+                           f'ite2_layer_{i+1}/test' for i in range(12)]
             n_feats = 12
         else:
             feat_pathes = [feat_path/'test']
