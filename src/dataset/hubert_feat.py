@@ -1,5 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
+import random
 
 import numpy as np
 import pandas as pd
@@ -21,7 +22,13 @@ class HuBERTDataset(Dataset):
         sec: int = 10,
         net_pooling_rate: int = 320,
         transforms: T.Compose = None,
+        percentage: float = None,
     ) -> None:
+
+        if percentage is not None:
+            if percentage > 1 and percentage < 0:
+                raise RuntimeError(f'argument "percentage" value "{percentage}" is invalid.')
+
         self.feat_pathes = feat_pathes
         self.n_layers = len(feat_pathes)
 
@@ -45,6 +52,10 @@ class HuBERTDataset(Dataset):
         _filename = self.filenames[0]
         _feat = np.load(feat_pathes[0] / f'{_filename[:-4]}.npy')
         self.shape = _feat.shape
+
+        if percentage is not None:
+            n_samples = int(len(self.filenames) * percentage)
+            self.filenames = random.sample(self.filenames, n_samples)
 
     def __len__(self):
         return len(self.filenames)
@@ -85,17 +96,16 @@ class HuBERTDataset(Dataset):
 if __name__ == '__main__':
     dataset = HuBERTDataset(
         feat_pathes=[
-            Path(
-                '/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed_audioset/pretrain-base-ite2-23-layer-12/test'
-            ),
+            Path('/home/kajiwara21/nas02/home/dataset/hubert_feat/urbansed_audioset/nmf/ite2_layer_12/train'),
         ],
         metadata_path=Path(
-            '/home/kajiwara21/work/sed/meta/test_meta_strong.csv'),
+            '/home/kajiwara21/work/sed/meta/train_meta_strong.csv'),
         weak_label_path=Path(
-            '/home/kajiwara21/work/sed/meta/test_meta_weak.csv'),
+            '/home/kajiwara21/work/sed/meta/train_meta_weak.csv'),
         sr=16000,
         sec=10,
-        net_pooling_rate=320
+        net_pooling_rate=320,
+        percentage=1.0,
     )
 
     print(len(dataset))
@@ -105,4 +115,4 @@ if __name__ == '__main__':
     print(data['target'].shape)
     print(data['weak_label'])
 
-    print(np.where(data['target'] == 1.0))
+    # print(np.where(data['target'] == 1.0))

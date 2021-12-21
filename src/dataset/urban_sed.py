@@ -1,4 +1,5 @@
 from pathlib import Path
+import random
 
 import numpy as np
 import pandas as pd
@@ -19,7 +20,13 @@ class StrongDataset(Dataset):
         frame_hop: int = 256,
         net_pooling_rate: int = 1,
         transforms: T.Compose = None,
+        percentage: float = None
     ) -> None:
+
+        if percentage is not None:
+            if percentage > 1 and percentage < 0:
+                raise RuntimeError(f'argument "percentage" value "{percentage}" is invalid.')
+
         self.audio_path = audio_path
 
         self.meta_df = pd.read_csv(metadata_path)
@@ -39,6 +46,10 @@ class StrongDataset(Dataset):
         self.net_pooling_rate = net_pooling_rate
 
         self.transforms = transforms
+
+        if percentage is not None:
+            n_samples = int(len(self.filenames) * percentage)
+            self.filenames = random.sample(self.filenames, n_samples)
 
     def __len__(self):
         return len(self.filenames)
@@ -90,7 +101,8 @@ if __name__ == '__main__':
         sr=44100,
         sample_sec=10,
         frame_hop=1024,
-        net_pooling_rate=1
+        net_pooling_rate=1,
+        percentage=0.5,
     )
 
     print(len(dataset))
