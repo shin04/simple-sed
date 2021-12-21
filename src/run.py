@@ -65,6 +65,7 @@ def run(cfg: DictConfig) -> None:
     sample_sec = cfg['dataset']['sec']
     hop_length = cfg['feature']['hop_length']
     net_pooling_rate = cfg['dataset']['net_pooling_rate']
+    data_percentage = cfg['dataset']['percentage']
 
     n_epoch = cfg['training']['n_epoch']
     batch_size = cfg['training']['batch_size']
@@ -99,7 +100,8 @@ def run(cfg: DictConfig) -> None:
         sample_sec=sample_sec,
         frame_hop=hop_length,
         net_pooling_rate=net_pooling_rate,
-        transforms=transforms
+        transforms=transforms,
+        percentage=data_percentage,
     )
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True,

@@ -21,6 +21,7 @@ dataset:
   sr: 16000
   sec: 10
   net_pooling_rate: 1
+  percentage: 1.0
 
 feature:
   n_filters: 2048

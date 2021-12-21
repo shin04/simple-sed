@@ -57,6 +57,7 @@ def run(cfg: DictConfig) -> None:
     sr = cfg['dataset']['sr']
     sec = cfg['dataset']['sec']
     net_pooling_rate = cfg['dataset']['net_pooling_rate']
+    data_percentage = cfg['dataset']['percentage']
 
     n_epoch = cfg['training']['n_epoch']
     batch_size = cfg['training']['batch_size']
@@ -81,7 +82,8 @@ def run(cfg: DictConfig) -> None:
         sr=sr,
         sec=sec,
         net_pooling_rate=net_pooling_rate,
-        transforms=None
+        transforms=None,
+        percentage=data_percentage,
     )
     valid_dataset = HuBERTDataset(
         feat_pathes=[p / 'valid' for p in feat_pathes],
@@ -90,7 +92,7 @@ def run(cfg: DictConfig) -> None:
         sr=sr,
         sec=sec,
         net_pooling_rate=net_pooling_rate,
-        transforms=None
+        transforms=None,
     )
     test_dataset = HuBERTDataset(
         feat_pathes=[p / 'test' for p in feat_pathes],
@@ -99,7 +101,7 @@ def run(cfg: DictConfig) -> None:
         sr=sr,
         sec=sec,
         net_pooling_rate=net_pooling_rate,
-        transforms=None
+        transforms=None,
     )
 
     train_dataloader = DataLoader(

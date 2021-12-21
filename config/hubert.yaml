@@ -22,6 +22,7 @@ dataset:
   sr: 16000
   sec: 10
   net_pooling_rate: 320
+  percentage: 1.0
 
 training:
   n_epoch: 100
