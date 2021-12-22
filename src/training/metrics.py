@@ -71,8 +71,8 @@ def calc_sed_eval_metrics(
 ) -> dict:
     if len(prediction.columns) == 0:
         return {
-            'segment': {'class_wise_f1': 0.0, 'overall_f1': 0.0, },
-            'event': {'class_wise_f1': 0.0, 'overall_f1': 0.0, 'detail': {}}
+            'segment': {'class_wise_f1': 0.0, 'overall_f1': 0.0, 'by_event': {}, 'detail': {}},
+            'event': {'class_wise_f1': 0.0, 'overall_f1': 0.0, 'by_event': {}, 'detail': {}}
         }
 
     meta_df = pd.read_csv(metadata_path)
