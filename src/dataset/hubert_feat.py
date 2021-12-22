@@ -53,9 +53,13 @@ class HuBERTDataset(Dataset):
         _feat = np.load(feat_pathes[0] / f'{_filename[:-4]}.npy')
         self.shape = _feat.shape
 
-        if percentage is not None:
+        if percentage is not None and percentage != 1.0:
             n_samples = int(len(self.filenames) * percentage)
-            self.filenames = random.sample(self.filenames, n_samples)
+            indexes = [i for i in range(len(self.filenames))]
+            indexes = random.sample(indexes, n_samples)
+
+            self.filenames = [f for i, f in enumerate(self.filenames) if i in indexes]
+            self.weak_labels = [l for i, l in enumerate(self.weak_labels) if i in indexes]
 
     def __len__(self):
         return len(self.filenames)
