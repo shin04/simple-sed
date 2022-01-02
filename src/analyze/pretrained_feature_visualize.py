@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from analyze.reduce_dimention import run_tsne
-from analyze.load_data import load_pretrain_hubert_feature
+from analyze.load_data import load_pretrain_hubert_feature, load_hubert_label_embs
 
 
 def get_embedded_features(X: np.ndarray, out_path: Path = None) -> np.ndarray:
@@ -30,9 +30,9 @@ def generate_visualize_data(
         visualize_data[label] = {'x': [], 'y': []}
 
     for i, v in enumerate(tqdm(embedded_data)):
-        prob = np.random.rand()
-        if prob < 0.99:
-            continue
+        # prob = np.random.rand()
+        # if prob < 0.99:
+        #     continue
 
         label = labels[i]
         visualize_data[label]['x'].append(v[0])
@@ -59,7 +59,7 @@ def visualize(visualize_data: dict, classes: list, out_path: Path, image_name: s
     for i, label in enumerate(reversed(classes)):
         data = visualize_data[label]
         plt.scatter(data['x'], data['y'], label=label)
-    plt.legend(fontsize=20)
+    # plt.legend(fontsize=20)
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
     plt.savefig(out_path/image_name)
@@ -77,7 +77,9 @@ def run_feature_visualize(
 
     # prepare input data
     print('prepare input data and label')
-    X, labels = load_pretrain_hubert_feature(feat_path, km_path)
+    # X, labels = load_pretrain_hubert_feature(feat_path, km_path)
+    X = load_hubert_label_embs(feat_path)
+    labels = np.array([i for i in range(len(X))])
 
     # running T-SNE
     print('runnning T-SNE')

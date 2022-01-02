@@ -7,6 +7,16 @@ import pandas as pd
 import soundfile as sf
 
 
+def load_hubert_label_embs(label_embs_path: Path) -> np.ndarray:
+    print('loading hubert label embeddings ...')
+    if not label_embs_path.exists():
+        raise FileNotFoundError(f'{label_embs_path} is not found')
+
+    label_embs = np.load(label_embs_path)
+
+    return label_embs
+
+
 def load_pretrain_hubert_feature(feat_path: Path, km_path: Path) -> np.ndarray:
     print('loading pretrained hubert feature ...')
     if not feat_path.exists():

@@ -43,7 +43,7 @@ pretrained_feature_vis:
 	docker run -it \
 		--shm-size=16g \
 		--mount type=bind,source=$(HOME_DIR)/work/sed/src/analyze,target=/work/analyze \
-		--mount type=bind,source=$(HOME_DIR)/nas02/home/dataset/hubert_feat/for_viz,target=/work/dataset/feat \
+		--mount type=bind,source=$(HOME_DIR)/mrnas02/home/models/hubert/nmf_act_ite1,target=/work/dataset/feat \
 		--mount type=bind,source=$(HOME_DIR)$(VISUALIZE_RESULT_PATH),target=/work/visualize_result \
 		--name sed-pretrained-feature-visualize \
 		--gpus all \
