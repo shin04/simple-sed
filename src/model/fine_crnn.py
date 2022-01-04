@@ -85,4 +85,4 @@ if __name__ == '__main__':
         rnn_cfg=model_conf['rnn']
     ).cpu()
 
-    summary(model, input_size=(8, 160000))
+    summary(model, input_size=(4, 160000))
