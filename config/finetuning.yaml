@@ -37,6 +37,7 @@ training:
 model:
   save: false
   save_path: "models"
+  base_model_path: "models/pretrain/mfcc_best.pt"
   cnn:
     num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
     in_channels: 1
@@ -110,6 +111,7 @@ evaluate:
       0.97,
       0.99,
     ]
+  median_filter: 7
   psds:
     val_num: 3
     dtc_thresholds: [0.7, 0.5, 0.1]
