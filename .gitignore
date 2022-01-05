@@ -13,6 +13,8 @@ __pycache__
 /src/sample*.py
 /src/ex_script/
 
+/fairseq/
+
 .env.mlflow*
 
 *out
