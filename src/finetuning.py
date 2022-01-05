@@ -115,7 +115,7 @@ def run(cfg: DictConfig) -> None:
 
     """prepare training"""
     model = FineCRNN(
-        pretrain_weight_path='/home/kajiwara21/mrnas02/home/models/hubert/mfcc/pretrain_ite2_23/checkpoint_best.pt',
+        pretrain_weight_path=base_dir / cfg['model']['base_model_path'],
         **cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
