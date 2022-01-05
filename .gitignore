@@ -8,6 +8,8 @@ results
 /notebooks/
 /visualize_result/
 /*env/
+/.venv/
+/.venv-finetune/
 /src/outputs/
 /src/multirun/
 /src/sample*.py
