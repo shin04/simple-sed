@@ -43,7 +43,7 @@ run-finetune:
 		sed-finetune /bin/bash
 
 attach-finetune:
-	docker exec -it build-finetune /bin/bash
+	docker exec -it sed-finetune /bin/bash
 
 feature_visualize:
 	docker run -it \

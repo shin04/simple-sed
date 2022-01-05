@@ -2,9 +2,9 @@ __pycache__
 
 /dataset/
 /log/
-/meta*/
-/models/
-/results/
+meta*
+models
+results
 /notebooks/
 /visualize_result/
 /*env/
