@@ -30,6 +30,7 @@ class FineCRNN(nn.Module):
         huert_weights = hubert_dict['model']
         self.hubert_model = HubertModel(hubert_model_cfg, hubert_task_cfg, [[str(i) for i in range(504)]])
         self.hubert_model.load_state_dict(huert_weights)
+        self.set_requires_grad()
 
         self.cnn = CNN(**cnn_cfg)
         self.rnn = BidirectionalGRU(**rnn_cfg)
@@ -45,9 +46,19 @@ class FineCRNN(nn.Module):
             )
             self.att_softmax = nn.Softmax(dim=-1)
 
+    def set_requires_grad(self):
+        for param in self.hubert_model.parameters():
+            param.requires_grad = False
+
     def forward(self, input):
-        x = self.hubert_model.extract_features(source=input, output_layer=12)
-        x = x[0]
+        # x = self.hubert_model.extract_features(source=input, output_layer=12)
+        res = self.hubert_model.forward(
+            source=input,
+            mask=False,
+            features_only=True,
+            output_layer=12,
+        )
+        x = res["features"]
 
         x = x.squeeze(-1)
         x = x.unsqueeze(1)
