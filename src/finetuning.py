@@ -238,7 +238,9 @@ def run(cfg: DictConfig) -> None:
         """test step"""
         log.info("start evaluate ...")
         model = FineCRNN(
-            pretrain_weight_path='/home/kajiwara21/mrnas02/home/models/hubert/mfcc/pretrain_ite2_23/checkpoint_best.pt',
+            pretrain_weight_path=base_dir / cfg['model']['base_model_path'],
+            use_layer=cfg['model']['use_layer'],
+            freeze_layer=int(cfg['model']['freeze_layer']),
             **cfg['model']['dence'],
             cnn_cfg=dict(cfg['model']['cnn']),
             rnn_cfg=dict(cfg['model']['rnn']),
