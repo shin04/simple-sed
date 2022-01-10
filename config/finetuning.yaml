@@ -39,6 +39,7 @@ model:
   save_path: "models"
   base_model_path: "models/pretrain/mfcc_best.pt"
   use_layer: 12
+  freeze_layer: 11
   cnn:
     num_layers: 4 # FORGET FIX THIS PARAMETER!!!!
     in_channels: 1

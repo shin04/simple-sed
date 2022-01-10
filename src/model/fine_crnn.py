@@ -16,6 +16,7 @@ class FineCRNN(nn.Module):
         self,
         pretrain_weight_path: Path,
         use_layer: int,
+        freeze_layer: int,
         cnn_cfg: dict = {},
         rnn_cfg: dict = {},
         dropout_rate: float = 0.5,
@@ -30,6 +31,7 @@ class FineCRNN(nn.Module):
         hubert_model_cfg = HubertConfig(**hubert_dict['cfg']['model'])
         hubert_weights = hubert_dict['model']
         self.use_layer = use_layer
+        self.freeze_layer = freeze_layer
         self.hubert_model = HubertModel(hubert_model_cfg, hubert_task_cfg, [[str(i) for i in range(504)]])
         self.hubert_model.load_state_dict(hubert_weights)
         self.set_requires_grad(hubert_weights.keys())
@@ -49,24 +51,24 @@ class FineCRNN(nn.Module):
             self.att_softmax = nn.Softmax(dim=-1)
 
     def set_requires_grad(self, weight_keys):
-        layer_num = -1
         weight_index = -1
         for i, k in enumerate(weight_keys):
             try:
                 layer_num = int(k.split('.')[2])
-                weight_index = i
             except IndexError:
                 continue
             except ValueError:
                 continue
 
-            if layer_num == self.use_layer-1:
+            if layer_num == self.freeze_layer:
                 break
+            else:
+                weight_index = i
 
         for i, param in enumerate(self.hubert_model.parameters()):
             param.requires_grad = False
 
-            if i == weight_index - 1:
+            if i == weight_index:
                 break
 
     def forward(self, input):
@@ -112,6 +114,7 @@ if __name__ == '__main__':
     model = FineCRNN(
         pretrain_weight_path='/home/kajiwara21/mrnas02/home/models/hubert/mfcc/pretrain_ite2_23/checkpoint_best.pt',
         use_layer=12,
+        freeze_layer=10,
         cnn_cfg=model_conf['cnn'],
         rnn_cfg=model_conf['rnn']
     ).cpu()
