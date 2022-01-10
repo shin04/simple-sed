@@ -116,7 +116,8 @@ def run(cfg: DictConfig) -> None:
     """prepare training"""
     model = FineCRNN(
         pretrain_weight_path=base_dir / cfg['model']['base_model_path'],
-        **cfg['model']['dence'],
+        use_layer=cfg['model']['use_layer'],
+        ** cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
         attention=True,
