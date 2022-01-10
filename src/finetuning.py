@@ -117,7 +117,7 @@ def run(cfg: DictConfig) -> None:
     model = FineCRNN(
         pretrain_weight_path=base_dir / cfg['model']['base_model_path'],
         use_layer=cfg['model']['use_layer'],
-        freeze_layer=cfg['model']['freeze_layer']
+        freeze_layer=int(cfg['model']['freeze_layer']),
         ** cfg['model']['dence'],
         cnn_cfg=dict(cfg['model']['cnn']),
         rnn_cfg=dict(cfg['model']['rnn']),
