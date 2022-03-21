@@ -119,6 +119,6 @@ if __name__ == '__main__':
     ).cpu()
     summary(model, input_size=(8, 128, 1000))
 
-    for l in model.state_dict().keys():
-        print(l)
+    # for l in model.state_dict().keys():
+    #     print(l)
     # summary(model, input_size=(8, 768, 499))
