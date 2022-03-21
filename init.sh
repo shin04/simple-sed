@@ -1,18 +1,22 @@
-WORK_DIR=$PWD
+#!/bin/bash
+
+#----- load .env file -----#
+source ./.env
 
 #----- synbolic link -----#
-ln -s $HOME/mrnas02home/datasets/urban_sed/meta ./meta
-ln -s $HOME/nas02home/models/sed ./models
-ln -s $HOME/nas02home/results/sed ./results
+cd $WORK_DIR
+ln -s $META_PATH ./meta
+ln -s $MODEL_PATH ./models
+ln -s $RESULT_PATH ./results
 mkdir ./dataset
 cd ./dataset
-ln -s $HOME/mrnas02home/datasets/urban_sed/audio ./audio
-ln -s $HOME/nas02home/dataset/hubert_feat/urbansed_audioset ./feat
+ln -s $AUDIO_PATH ./audio
+ln -s $FEAT_PATH ./feat
 
 #----- generate .env.mlflow -----#
 cd $WORK_DIR
 touch .env.mlflow
-echo "TRACKING_URL=$WORK_DIR/results/mlflow" > .env.mlflow
+echo "TRACKING_URL=$MLFLOW_TRACKING_PATH" > .env.mlflow
 
 #----- venv -----#
 # downstream task
@@ -36,8 +40,8 @@ pip install install \
     torchvision==0.10.0+cu111 \
     torchaudio==0.9.0 \
     -f https://download.pytorch.org/whl/torch_stable.html
-cd ../fairseq
+cd $FAIRSEQ_DIR
 pip install --editable ./
 deactivate
 
-cd ../simple-sed
+cd $WORK_DIR
