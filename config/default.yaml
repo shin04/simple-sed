@@ -1,17 +1,17 @@
-ex_name: "sample"
-device: "cuda"
+ex_name: default
+device: cuda
 
 dataset:
-  audio_path: "/ml/dataset/audio"
-  train_meta: "/ml/meta/train_meta_strong.csv"
-  valid_meta: "/ml/meta/valid_meta_strong.csv"
-  test_meta: "/ml/meta/test_meta_strong.csv"
-  train_weak_label: "/ml/meta/train_meta_weak.csv"
-  valid_weak_label: "/ml/meta/valid_meta_weak.csv"
-  test_weak_label: "/ml/meta/test_meta_weak.csv"
-  train_duration: "/ml/meta/train_meta_duration.csv"
-  valid_duration: "/ml/meta/valid_meta_duration.csv"
-  test_duration: "/ml/meta/test_meta_duration.csv"
+  audio_path: /path/to/audio
+  train_meta: /path/to/train_meta
+  valid_meta: /path/to/valid/meta
+  test_meta: /path/to/test/meta
+  train_weak_label: /path/to/train_weak_label
+  valid_weak_label: /path/to/valid_weak_label
+  test_weak_label: /path/to/test_weak_label
+  train_duration: /path/to/train_duration
+  valid_duration: /path/to/valid_duration
+  test_duration: /path/to/test_duration
   sr: 44100
   sec: 10
   net_pooling_rate: 1
@@ -33,7 +33,7 @@ training:
   thresholds: [0.5]
 
 model:
-  save_path: "/ml/models"
+  save_path: /path/to/model_save_dir
   cnn:
     num_layers: 3
     in_channels: 1
