@@ -28,6 +28,20 @@ run:
 attach:
 	docker exec -it $(CONTAINER_NAME) /bin/bash
 
+train:
+	docker run -it \
+		--env HDF5_USE_FILE_LOCKING='FALSE' \
+		--shm-size=16g \
+		--mount type=bind,source=$(WORK_DIR),target=/ml \
+		--mount type=bind,source=$(AUDIO_PATH),target=/ml/dataset/audio \
+		--mount type=bind,source=$(FEAT_PATH),target=/ml/dataset/feat \
+		--mount type=bind,source=$(MODEL_PATH),target=/ml/models \
+		--mount type=bind,source=$(RESULT_PATH),target=/ml/results \
+		--name $(CONTAINER_NAME)-train \
+		--gpus all \
+		--workdir /ml/src \
+		$(IMAGE_NAME) /bin/bash -c "python3 run.py"
+
 run-finetune:
 	docker run -it \
 		--env HDF5_USE_FILE_LOCKING='FALSE' \

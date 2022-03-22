@@ -3,6 +3,33 @@
 卒業研究の下流タスク用のリポジトリ。
 オーディオデータ、またはHuBERT特徴量を利用した学習が可能。
 
+## ディレクトリ構成
+
+```
+simple-sed
+├─ config # 各パラメータの設定ファイル
+│   ├─ baseline.yaml
+│   ├─ default.yaml
+│   ├─ finetuning.yaml
+│   └─ hubert.yaml
+├─ dataset # データセット（init.shで生成）
+├─ log # ログファイル
+├─ meta # メタファイル（init.shで生成）
+├─ models # モデルの保存先（init.shで生成）
+├─ results # 生成物の保存先（init.shで生成）
+├─ src # ソースディレクトリ
+├─ .gitignore
+├─ Dockerfile
+├─ Dockerfile.cuml
+├─ Dockerfile.finetune
+├─ init.sh
+├─ Makefile
+├─ README.md
+├─ requirements.txt
+├─ requirements.finetune.txt
+└─ .venv # init.shで生成
+```
+
 # Setup
 
 1. 環境変数の設定
@@ -50,10 +77,30 @@
     $ make pretrained_feature_vis # for analyze
     ```
 
+5. setting config file
+
+    `config`ファイル内のyamlファイルに各パラメータを設定
+
 # Examples
 
 ## Training
 
+**そのまま**
+```bash
+$ source .venv/bin/activate
+$ cd src
+$ python run.py
+```
+
+**dockerを利用**
+```bash
+$ make train
+```
+
 ## Inference
 
-## Visualize
+```bash
+$ source .venv/bin/activate
+$ cd src
+$ python test_process.py $(model type) $(path/to/model) $(path/to/hubert/feature) -a -g
+```

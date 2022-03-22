@@ -5,6 +5,7 @@ source ./.env
 
 #----- synbolic link -----#
 cd $WORK_DIR
+mkdir log
 ln -s $META_PATH ./meta
 ln -s $MODEL_PATH ./models
 ln -s $RESULT_PATH ./results
